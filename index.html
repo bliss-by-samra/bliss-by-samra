@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>BLISS — Editors & Fanpages</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">BLISS<span>.</span></div>
+    <div class="owner">Samra · Founder &amp; Owner</div>
+  </header>
+  <main class="wrap">
+    <section class="hero">
+      <p class="eyebrow">A creative home for editors &amp; fanpages</p>
+      <h1>Your editing world,<br><em>all in one place.</em></h1>
+      <p class="intro">Find collaborators, exchange genuine support, discover editing resources and get help with your edits.</p>
+    </section>
+
+    <section class="panel auth-panel">
+      <h2>Join BLISS</h2>
+      <p class="muted">Create a BLISS account or sign in. This is separate from Instagram.</p>
+      <label>Email<input id="email" type="email" autocomplete="email" placeholder="you@example.com"></label>
+      <label>Password<input id="password" type="password" autocomplete="new-password" placeholder="At least 6 characters"></label>
+      <div class="actions">
+        <button id="signup">Create account</button>
+        <button id="login" class="secondary">Log in</button>
+      </div>
+      <p id="authMessage" class="message" aria-live="polite"></p>
+    </section>
+
+    <section id="memberArea" class="hidden">
+      <div class="panel welcome">
+        <div><p class="eyebrow">MEMBER DASHBOARD</p><h2 id="welcomeTitle">Welcome to BLISS</h2><p id="memberEmail" class="muted"></p></div>
+        <button id="logout" class="secondary small">Log out</button>
+      </div>
+      <div class="grid">
+        <article class="tile"><h3>Collaborators</h3><p>Find editors and fanpage partners. Coming next.</p></article>
+        <article class="tile"><h3>Support System</h3><p>Like, comment, follow and share through genuine community support. Coming next.</p></article>
+        <article class="tile"><h3>Editing Stuff</h3><p>Discover backgrounds, overlays, fonts and resources. Coming next.</p></article>
+        <article class="tile"><h3>Editing Help Desk</h3><p>Send Samra an editing question. Coming next.</p></article>
+        <article class="tile"><h3>BLISS Official Updates</h3><p>Official announcements from Samra. Coming next.</p></article>
+        <article class="tile"><h3>BLISS Circle</h3><p>A community space for editors and fanpages. Coming next.</p></article>
+      </div>
+    </section>
+    <footer>BLISS · Made for editors and fanpages · <a href="https://www.instagram.com/your_edits_are_bliss/" target="_blank" rel="noopener">@your_edits_are_bliss</a></footer>
+  </main>
+  <script type="module" src="app.js"></script>
+</body>
+</html>
