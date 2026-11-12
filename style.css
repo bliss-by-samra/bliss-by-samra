@@ -57,3 +57,117 @@ textarea:focus {
   margin: 24px 0 8px;
   color: #75465e;
 }
+/* BLISS APP LAYOUT */
+
+.app-wrap {
+  max-width: 900px;
+  margin: auto;
+  padding: 28px 20px 105px;
+  min-height: calc(100vh - 68px);
+}
+
+.page-title {
+  color: #75465e;
+  font-size: 34px;
+  margin: 12px 0;
+}
+
+.page-title span {
+  color: #d19bb8;
+}
+
+.screen {
+  animation: blissFade .2s ease;
+}
+
+@keyframes blissFade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.panel {
+  margin: 18px 0;
+}
+
+.bottom-nav {
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  background: #fff;
+  border-top: 1px solid #eadde6;
+  padding: 8px 5px calc(8px + env(safe-area-inset-bottom));
+  box-shadow: 0 -5px 20px #75465e0c;
+}
+
+.bottom-nav.hidden {
+  display: none;
+}
+
+.nav-button {
+  flex: 1;
+  background: transparent;
+  color: #9b8797;
+  border-radius: 12px;
+  padding: 5px 2px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  min-width: 0;
+}
+
+.nav-button span {
+  font-size: 23px;
+  line-height: 1.2;
+}
+
+.nav-button small {
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.nav-button.active {
+  color: #75465e;
+  background: #f8f2f6;
+}
+
+.nav-shortcut {
+  margin-top: 10px;
+}
+
+.logout-button {
+  margin: 15px 0 30px;
+  width: 100%;
+}
+
+.chat-messages {
+  display: grid;
+  gap: 10px;
+  max-height: 350px;
+  overflow-y: auto;
+  padding: 10px 0;
+}
+
+@media(max-width:520px) {
+  .app-wrap {
+    padding: 22px 15px 105px;
+  }
+
+  .page-title {
+    font-size: 29px;
+  }
+
+  .bottom-nav {
+    padding-left: 2px;
+    padding-right: 2px;
+  }
+
+  .nav-button small {
+    font-size: 9px;
+  }
+}
