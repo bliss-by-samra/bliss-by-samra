@@ -1,129 +1,190 @@
+
 <!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>BLISS — Editors & Fanpages</title>
+  <meta name="theme-color" content="#f8f2f6">
+  <title>BLISS — Your Creative Community</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <header class="topbar">
-    <div class="brand">BLISS<span>.</span></div>
-    <div class="owner">Samra · Founder &amp; Owner</div>
-  </header>
 
-  <main class="wrap">
-    <section class="hero">
-      <p class="eyebrow">A creative home for editors &amp; fanpages</p>
-      <h1>Your editing world,<br><em>all in one place.</em></h1>
-      <p class="intro">Find collaborators, exchange genuine support, discover editing resources and get help with your edits.</p>
+<header class="topbar">
+  <div class="brand">BLISS<span>.</span></div>
+  <div id="topLabel" class="owner">Your creative community</div>
+</header>
+
+<main class="app-wrap">
+
+  <section id="authPanel" class="panel auth-panel">
+    <p class="eyebrow">WELCOME TO BLISS</p>
+    <h1>Your editing world,<br><em>all in one place.</em></h1>
+    <p class="muted">A creative home for editors and fanpages.</p>
+
+    <label>Email
+      <input id="email" type="email" autocomplete="email" placeholder="you@example.com">
+    </label>
+
+    <label>Password
+      <input id="password" type="password" autocomplete="current-password" placeholder="At least 6 characters">
+    </label>
+
+    <div class="actions">
+      <button id="signup">Create account</button>
+      <button id="login" class="secondary">Log in</button>
+    </div>
+    <p id="authMessage" class="message" aria-live="polite"></p>
+  </section>
+
+  <section id="appArea" class="hidden">
+
+    <section id="homePage" class="screen">
+      <p class="eyebrow">YOUR CREATIVE SPACE</p>
+      <h1 class="page-title">Welcome to BLISS<span>.</span></h1>
+      <p class="muted">Create, connect and grow together.</p>
+
+      <div class="panel">
+        <h2>Official Updates</h2>
+        <div id="announcements" class="data-list">Loading updates...</div>
+      </div>
+
+      <div class="panel">
+        <h2>Explore BLISS</h2>
+        <p class="muted">Discover creators, find collaborators and share your editing journey.</p>
+        <button class="nav-shortcut" data-page="discoverPage">Discover members</button>
+      </div>
     </section>
 
-    <section id="authPanel" class="panel auth-panel">
-      <h2>Join BLISS</h2>
-      <p class="muted">Create a BLISS account or sign in. This is separate from Instagram.</p>
-      <label>Email
-        <input id="email" type="email" autocomplete="email" placeholder="you@example.com">
-      </label>
-      <label>Password
-        <input id="password" type="password" autocomplete="current-password" placeholder="At least 6 characters">
-      </label>
-      <div class="actions">
-        <button id="signup">Create account</button>
-        <button id="login" class="secondary">Log in</button>
-      </div>
-      <p id="authMessage" class="message" aria-live="polite"></p>
+    <section id="discoverPage" class="screen hidden">
+      <p class="eyebrow">MEET THE COMMUNITY</p>
+      <h1 class="page-title">Discover</h1>
+      <p class="muted">Find editors and fanpages on BLISS.</p>
+      <div id="directory" class="data-list">Loading profiles...</div>
     </section>
 
-    <section id="memberArea" class="hidden">
-      <div class="panel welcome">
-        <div>
-          <p class="eyebrow" id="roleLabel">MEMBER DASHBOARD</p>
-          <h2 id="welcomeTitle">Welcome to BLISS</h2>
-          <p class="muted" id="accountNote">Your BLISS account is ready.</p>
-        </div>
-        <button id="logout" class="secondary small">Log out</button>
+    <section id="createPage" class="screen hidden">
+      <p class="eyebrow">CREATE & GET HELP</p>
+      <h1 class="page-title">Create</h1>
+
+      <div class="panel">
+        <h2>Editing Help Desk</h2>
+        <p class="muted">Send an editing question directly to Samra, the BLISS owner.</p>
+
+        <label>Your question
+          <textarea id="helpMessage" maxlength="1000" rows="5" placeholder="Ask anything about editing..."></textarea>
+        </label>
+
+        <button id="sendHelp">Send request</button>
+        <p id="helpStatus" class="message" aria-live="polite"></p>
       </div>
 
-      <div class="grid">
-        <article class="tile">
-          <h3>My Profile</h3>
-          <p>Add your public Instagram editing or fanpage details.</p>
-          <label>Instagram username
-            <input id="igHandle" maxlength="30" placeholder="@yourusername">
-          </label>
-          <label>Instagram profile link
-            <input id="igLink" type="url" maxlength="200" placeholder="https://www.instagram.com/yourusername/">
-          </label>
-          <label>About your page
-            <input id="profileBio" maxlength="120" placeholder="What kind of edits do you make?">
-          </label>
-          <button id="saveProfile">Save profile</button>
-          <p id="profileMessage" class="message" aria-live="polite"></p>
-        </article>
+      <div class="panel">
+        <h2>Editing Resources</h2>
+        <p class="muted">Backgrounds, overlays, fonts and editing resources will have their own collection here.</p>
+      </div>
+    </section>
 
-        <article class="tile">
-          <h3>Collaborators</h3>
-          <p>Discover other BLISS editors and fanpages.</p>
-          <div id="directory" class="data-list">Loading members...</div>
-        </article>
+    <section id="messagesPage" class="screen hidden">
+      <p class="eyebrow">CONNECT PRIVATELY</p>
+      <h1 class="page-title">Messages</h1>
 
-        <article class="tile">
-          <h3>Editing Help Desk</h3>
-          <p>Send an editing question to the BLISS owner.</p>
-          <label>Your question
-            <textarea id="helpMessage" maxlength="1000" rows="4" placeholder="Tell us what you need help with..."></textarea>
-          </label>
-          <button id="sendHelp">Send request</button>
-          <p id="helpStatus" class="message" aria-live="polite"></p>
-        </article>
-
-        <article class="tile">
-          <h3>BLISS Official Updates</h3>
-          <p>Announcements from the owner.</p>
-          <div id="announcements" class="data-list">Loading updates...</div>
-        </article>
-
-        <article class="tile">
-          <h3>Editing Stuff</h3>
-          <p>Resource collections will be added in a later update. Never download files from links you don't trust.</p>
-        </article>
-
-        <article class="tile">
-          <h3>BLISS Circle</h3>
-          <p>Community features are being prepared with privacy and moderation in mind.</p>
-        </article>
+      <div class="panel">
+        <h2>Message Requests</h2>
+        <p class="muted">Review requests before starting a conversation.</p>
+        <div id="messageRequests" class="data-list">No requests yet.</div>
       </div>
 
-      <section id="ownerPanel" class="panel hidden owner-panel">
-        <p class="eyebrow">OWNER CONTROL PANEL</p>
+      <div class="panel">
+        <h2>Your Conversations</h2>
+        <div id="conversations" class="data-list">No conversations yet.</div>
+      </div>
+
+      <div id="chatPanel" class="panel hidden">
+        <button id="backToMessages" class="secondary small">Back to messages</button>
+        <h2 id="chatTitle">Conversation</h2>
+        <div id="chatMessages" class="chat-messages"></div>
+        <label>Message
+          <textarea id="chatInput" maxlength="1000" rows="2" placeholder="Write a message..."></textarea>
+        </label>
+        <button id="sendChat">Send</button>
+        <button id="blockMember" class="secondary small">Block member</button>
+        <button id="reportMember" class="secondary small">Report member</button>
+        <p id="chatStatus" class="message" aria-live="polite"></p>
+      </div>
+    </section>
+
+    <section id="profilePage" class="screen hidden">
+      <p class="eyebrow">YOUR BLISS ACCOUNT</p>
+      <h1 class="page-title">My Profile</h1>
+
+      <div class="panel">
+        <p id="roleLabel" class="eyebrow">MEMBER</p>
+        <h2 id="welcomeTitle">Your profile</h2>
+        <p id="accountNote" class="muted"></p>
+
+        <label>Instagram username
+          <input id="igHandle" maxlength="30" placeholder="@yourusername">
+        </label>
+
+        <label>Instagram profile link
+          <input id="igLink" type="url" maxlength="200" placeholder="https://www.instagram.com/yourusername/">
+        </label>
+
+        <label>About your page
+          <textarea id="profileBio" maxlength="120" rows="3" placeholder="Tell us about your edits..."></textarea>
+        </label>
+
+        <button id="saveProfile">Save profile</button>
+        <p id="profileMessage" class="message" aria-live="polite"></p>
+      </div>
+
+      <section id="ownerPanel" class="panel hidden">
+        <p class="eyebrow">OWNER ONLY</p>
         <h2>BLISS Administration</h2>
-        <p class="muted">Only the official owner account can publish announcements and view the member directory here.</p>
 
-        <h3>Publish an announcement</h3>
+        <h3>Help Desk Inbox</h3>
+        <p class="muted">Questions sent by members appear here privately.</p>
+        <div id="ownerHelp" class="data-list">Loading requests...</div>
+
+        <h3>Publish Official Update</h3>
         <label>Announcement title
           <input id="announcementTitle" maxlength="80" placeholder="Announcement title">
         </label>
-        <label>Message
-          <textarea id="announcementBody" maxlength="1500" rows="4" placeholder="Write an official BLISS update..."></textarea>
+        <label>Announcement message
+          <textarea id="announcementBody" maxlength="1500" rows="4" placeholder="Write your update..."></textarea>
         </label>
         <button id="publishAnnouncement">Publish update</button>
         <p id="announcementStatus" class="message" aria-live="polite"></p>
 
-        <h3>Registered public profiles</h3>
-        <div id="ownerDirectory" class="data-list">Loading...</div>
-
-        <h3>Help requests</h3>
-        <div id="ownerHelp" class="data-list">Loading...</div>
+        <h3>Member Directory</h3>
+        <div id="ownerDirectory" class="data-list">Loading members...</div>
       </section>
+
+      <button id="logout" class="secondary logout-button">Log out</button>
     </section>
 
-    <footer>
-      BLISS · Made for editors and fanpages ·
-      <a href="https://www.instagram.com/your_edits_are_bliss/" target="_blank" rel="noopener">@your_edits_are_bliss</a>
-    </footer>
-  </main>
+  </section>
+</main>
 
-  <script type="module" src="app.js"></script>
+<nav id="bottomNav" class="bottom-nav hidden" aria-label="Main navigation">
+  <button class="nav-button active" data-page="homePage">
+    <span>⌂</span><small>Home</small>
+  </button>
+  <button class="nav-button" data-page="discoverPage">
+    <span>⌕</span><small>Discover</small>
+  </button>
+  <button class="nav-button" data-page="createPage">
+    <span>＋</span><small>Create</small>
+  </button>
+  <button class="nav-button" data-page="messagesPage">
+    <span>♡</span><small>Messages</small>
+  </button>
+  <button class="nav-button" data-page="profilePage">
+    <span>◉</span><small>Profile</small>
+  </button>
+</nav>
+
+<script type="module" src="app.js"></script>
 </body>
 </html>
