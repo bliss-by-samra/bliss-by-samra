@@ -9,63 +9,43 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
 <header class="topbar">
-  <div class="brand">BLISS<span>.</span></div>
-  <div id="topLabel" class="owner">Your creative community</div>
+  <a class="brand" href="#" data-page="homePage">BLISS<span>.</span></a>
+  <span id="topLabel" class="top-label">Your creative community</span>
 </header>
 
 <main class="app-wrap">
-
-  <!-- LOGIN -->
-  <section id="authPanel" class="panel auth-panel">
+  <section id="authPanel" class="auth-card">
     <p class="eyebrow">WELCOME TO BLISS</p>
-    <h1>Your editing world,<br><em>all in one place.</em></h1>
+    <h1>Your creative world,<br><em>all in one place.</em></h1>
     <p class="muted">A creative home for editors and fanpages.</p>
-
-    <label>Email
-      <input id="email" type="email" autocomplete="email" placeholder="you@example.com">
-    </label>
-
-    <label>Password
-      <input id="password" type="password" autocomplete="current-password" placeholder="At least 6 characters">
-    </label>
-
+    <label>Email<input id="email" type="email" autocomplete="email" placeholder="you@example.com"></label>
+    <label>Password<input id="password" type="password" autocomplete="current-password" placeholder="At least 6 characters"></label>
     <div class="actions">
       <button id="signup">Create account</button>
-      <button id="login" class="secondary">Log in</button>
+      <button id="login" class="button-soft">Log in</button>
     </div>
-    <p id="authMessage" class="message" aria-live="polite"></p>
+    <p id="authMessage" class="message"></p>
   </section>
 
   <section id="appArea" class="hidden">
-
-    <!-- HOME -->
     <section id="homePage" class="screen">
       <p class="eyebrow">YOUR CREATIVE SPACE</p>
       <h1 class="page-title">Welcome to BLISS<span>.</span></h1>
       <p class="muted">Create, connect and grow together.</p>
-
       <div class="panel">
+        <p class="eyebrow">FROM THE FOUNDER</p>
         <h2>Official Updates</h2>
         <div id="announcements" class="data-list">Loading updates...</div>
       </div>
-
-      <div class="panel">
-        <h2>Explore BLISS</h2>
-        <p class="muted">Discover creators, find collaborators and share your editing journey.</p>
-        <button class="nav-shortcut" data-page="discoverPage">Discover members</button>
+      <div class="feature-grid">
+        <button class="feature-card" data-page="discoverPage">⌕<strong>Discover creators</strong><small>Meet editors and fanpages</small></button>
+        <button class="feature-card" data-page="createPage">✦<strong>Editing Help Desk</strong><small>Get creative support</small></button>
+        <button class="feature-card" data-page="ownerProfilePage">♡<strong>Official profile</strong><small>Meet the BLISS founder</small></button>
       </div>
-
-      <div class="panel">
-        <p class="eyebrow">OFFICIAL BLISS</p>
-        <h2>Meet the Founder</h2>
-        <p class="muted">Visit Samra's official profile and explore her editing work and resources.</p>
-        <button class="nav-shortcut" data-page="ownerProfilePage">Visit Official Profile</button>
-      </div>
+      <div class="notice"><strong>BLISS is growing.</strong><span>New community features are coming soon.</span></div>
     </section>
 
-    <!-- DISCOVER -->
     <section id="discoverPage" class="screen hidden">
       <p class="eyebrow">MEET THE COMMUNITY</p>
       <h1 class="page-title">Discover</h1>
@@ -73,189 +53,98 @@
       <div id="directory" class="data-list">Loading profiles...</div>
     </section>
 
-    <!-- CREATE -->
     <section id="createPage" class="screen hidden">
-      <p class="eyebrow">CREATE & GET HELP</p>
+      <p class="eyebrow">CREATE & LEARN</p>
       <h1 class="page-title">Create</h1>
-
       <div class="panel">
         <h2>Editing Help Desk</h2>
-        <p class="muted">Send an editing question directly to Samra, the BLISS owner.</p>
-
-        <label>Your question
-          <textarea id="helpMessage" maxlength="1000" rows="5" placeholder="Ask anything about editing..."></textarea>
-        </label>
-
+        <p class="muted">Send an editing question directly to Samra.</p>
+        <label>Your question<textarea id="helpMessage" maxlength="1000" rows="5" placeholder="Ask anything about editing..."></textarea></label>
         <button id="sendHelp">Send request</button>
-        <p id="helpStatus" class="message" aria-live="polite"></p>
+        <p id="helpStatus" class="message"></p>
       </div>
-
       <div class="panel">
         <h2>Editing Resources</h2>
-        <p class="muted">Backgrounds, overlays, fonts and editing resources will be available in the official resource library.</p>
-        <button class="nav-shortcut" data-page="ownerProfilePage">Visit Official Profile</button>
+        <p class="muted">The official editing library is being prepared.</p>
+        <button class="button-soft" data-page="ownerProfilePage">Visit Official Profile</button>
       </div>
     </section>
 
-    <!-- MESSAGES -->
     <section id="messagesPage" class="screen hidden">
-      <p class="eyebrow">CONNECT PRIVATELY</p>
+      <p class="eyebrow">COMMUNITY CONNECTION</p>
       <h1 class="page-title">Messages</h1>
-
       <div class="panel">
-        <h2>Message Requests</h2>
-        <p class="muted">Review requests before starting a conversation.</p>
-        <div id="messageRequests" class="data-list">No requests yet.</div>
+        <h2>Member messaging</h2>
+        <p class="muted">Private messaging is being prepared with safety and message-request controls.</p>
       </div>
-
       <div class="panel">
-        <h2>Your Conversations</h2>
-        <div id="conversations" class="data-list">No conversations yet.</div>
-      </div>
-
-      <div id="chatPanel" class="panel hidden">
-        <button id="backToMessages" class="secondary small">Back to messages</button>
-        <h2 id="chatTitle">Conversation</h2>
-        <div id="chatMessages" class="chat-messages"></div>
-
-        <label>Message
-          <textarea id="chatInput" maxlength="1000" rows="2" placeholder="Write a message..."></textarea>
-        </label>
-
-        <button id="sendChat">Send</button>
-        <button id="blockMember" class="secondary small">Block member</button>
-        <button id="reportMember" class="secondary small">Report member</button>
-        <p id="chatStatus" class="message" aria-live="polite"></p>
+        <h2>Need help?</h2>
+        <button data-page="createPage">Open Help Desk</button>
       </div>
     </section>
 
-    <!-- PERSONAL MEMBER PROFILE -->
     <section id="profilePage" class="screen hidden">
       <p class="eyebrow">YOUR BLISS ACCOUNT</p>
       <h1 class="page-title">My Profile</h1>
-
       <div class="panel">
         <p id="roleLabel" class="eyebrow">MEMBER</p>
         <h2 id="welcomeTitle">Your profile</h2>
         <p id="accountNote" class="muted"></p>
-
-        <label>Instagram username
-          <input id="igHandle" maxlength="30" placeholder="@yourusername">
-        </label>
-
-        <label>Instagram profile link
-          <input id="igLink" type="url" maxlength="200" placeholder="https://www.instagram.com/yourusername/">
-        </label>
-
-        <label>About your page
-          <textarea id="profileBio" maxlength="120" rows="3" placeholder="Tell us about your edits..."></textarea>
-        </label>
-
+        <label>Instagram username<input id="igHandle" maxlength="30" placeholder="@yourusername"></label>
+        <label>Instagram profile link<input id="igLink" type="url" maxlength="200" placeholder="https://www.instagram.com/yourusername/"></label>
+        <label>About your page<textarea id="profileBio" maxlength="120" rows="3" placeholder="Tell us about your edits..."></textarea></label>
         <button id="saveProfile">Save profile</button>
-        <p id="profileMessage" class="message" aria-live="polite"></p>
+        <p id="profileMessage" class="message"></p>
       </div>
 
-      <!-- OWNER ADMINISTRATION -->
       <section id="ownerPanel" class="panel hidden">
         <p class="eyebrow">OWNER ONLY</p>
         <h2>BLISS Administration</h2>
-
         <h3>Help Desk Inbox</h3>
-        <p class="muted">Questions sent by members appear here privately.</p>
         <div id="ownerHelp" class="data-list">Loading requests...</div>
-
         <h3>Publish Official Update</h3>
-        <label>Announcement title
-          <input id="announcementTitle" maxlength="80" placeholder="Announcement title">
-        </label>
-
-        <label>Announcement message
-          <textarea id="announcementBody" maxlength="1500" rows="4" placeholder="Write your update..."></textarea>
-        </label>
-
+        <label>Announcement title<input id="announcementTitle" maxlength="80" placeholder="Announcement title"></label>
+        <label>Announcement message<textarea id="announcementBody" maxlength="1500" rows="4" placeholder="Write your update..."></textarea></label>
         <button id="publishAnnouncement">Publish update</button>
-        <p id="announcementStatus" class="message" aria-live="polite"></p>
-
+        <p id="announcementStatus" class="message"></p>
         <h3>Member Directory</h3>
-        <div id="ownerDirectory" class="data-list">Loading members...</div>
+        <div id="ownerDirectory" class="data-list"></div>
       </section>
-
-      <button id="logout" class="secondary logout-button">Log out</button>
+      <button id="logout" class="button-soft logout-button">Log out</button>
     </section>
 
-    <!-- OFFICIAL OWNER PROFILE -->
     <section id="ownerProfilePage" class="screen hidden">
       <p class="eyebrow">BLISS OFFICIAL</p>
       <h1 class="page-title">Founder Profile</h1>
-
       <div class="panel owner-profile-card">
-
         <div class="owner-avatar">
-          <img
-            src="https://raw.githubusercontent.com/bliss-by-samra/bliss-by-samra/main/file_000000009ffc81f8b63fcbabf91165f8.png"
-            alt="Samra - Official BLISS Owner">
+          <img src="https://raw.githubusercontent.com/bliss-by-samra/bliss-by-samra/main/file_000000009ffc81f8b63fcbabf91165f8.png" alt="BLISS official logo">
         </div>
-
         <h2>Samra</h2>
-        <p class="eyebrow">FOUNDER & OFFICIAL OWNER</p>
-        <p class="muted">
-          Welcome to my official BLISS profile. Explore my edits,
-          creative posts and editing resources.
-        </p>
+        <p class="eyebrow">FOUNDER & OWNER</p>
+        <p class="muted">Welcome to my official BLISS profile. Explore our creative community.</p>
       </div>
-
       <div class="panel">
         <h2>My Editing Posts</h2>
-        <p class="muted">Official editing pictures and posts published by Samra.</p>
-        <div id="ownerPosts" class="owner-post-grid">
-          <p class="muted">Official editing posts will appear here.</p>
-        </div>
+        <p class="muted">Official editing posts will be added here.</p>
+        <div id="ownerPosts" class="data-list">No posts yet.</div>
       </div>
-
       <div class="panel">
         <h2>Editing Stuff</h2>
-        <p class="muted">
-          Browse and download editing resources uploaded by the BLISS owner.
-        </p>
-        <div id="resourceLibrary" class="data-list">
-          <p class="muted">Editing resources will appear here.</p>
-        </div>
+        <p class="muted">Editing resources will appear here when published.</p>
+        <div id="resourceLibrary" class="data-list">No resources yet.</div>
       </div>
-
-      <button class="secondary" data-page="homePage">Back to Home</button>
+      <button class="button-soft" data-page="homePage">Back to Home</button>
     </section>
-
   </section>
 </main>
 
-<!-- BOTTOM NAVIGATION -->
-<nav id="bottomNav" class="bottom-nav hidden" aria-label="Main navigation">
-
-  <button class="nav-button active" data-page="homePage">
-    <span>⌂</span>
-    <small>Home</small>
-  </button>
-
-  <button class="nav-button" data-page="discoverPage">
-    <span>⌕</span>
-    <small>Discover</small>
-  </button>
-
-  <button class="nav-button" data-page="createPage">
-    <span>＋</span>
-    <small>Create</small>
-  </button>
-
-  <button class="nav-button" data-page="messagesPage">
-    <span>♡</span>
-    <small>Messages</small>
-  </button>
-
-  <button class="nav-button" data-page="profilePage">
-    <span>◉</span>
-    <small>Profile</small>
-  </button>
-
+<nav id="bottomNav" class="bottom-nav hidden">
+  <button class="nav-button active" data-page="homePage"><span>⌂</span><small>Home</small></button>
+  <button class="nav-button" data-page="discoverPage"><span>⌕</span><small>Discover</small></button>
+  <button class="nav-button" data-page="createPage"><span>＋</span><small>Create</small></button>
+  <button class="nav-button" data-page="messagesPage"><span>♡</span><small>Messages</small></button>
+  <button class="nav-button" data-page="profilePage"><span>◉</span><small>Profile</small></button>
 </nav>
 
 <script type="module" src="app.js"></script>
