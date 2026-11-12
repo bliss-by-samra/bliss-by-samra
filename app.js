@@ -1,419 +1,945 @@
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
-import { getFirestore, doc, setDoc, getDoc, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 import { firebaseConfig } from "./firebase-config.js";
 
-const OWNER_UID = "4SbMYoerHiOaYeODrysDBuWqPFY2";
+import {
+  initializeApp
+} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+
+import {
+  getAuth,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+
+import {
+  getFirestore,
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  addDoc,
+  setDoc,
+  updateDoc,
+  query,
+  where,
+  limit,
+  serverTimestamp
+} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
-const $ = id => document.getElementById(id);
+
+const OWNER_UID = "4SbMYoerHiOaYeODrysDBuWqPFY2";
 
 let currentUser = null;
-let stopDirectory = null;
-let stopAnnouncements = null;
-let stopOwnerHelp = null;
+let currentChatId = null;
+let currentChatMember = null;
 
-function show(id, visible) {
-  const el = $(id);
-  if (el) el.classList.toggle("hidden", !visible);
+const $ = id => document.getElementById(id);
+
+function showMessage(id, message) {
+  const element = $(id);
+  if (element) element.textContent = message;
 }
 
-function say(id, text) {
-  const el = $(id);
-  if (el) el.textContent = text;
-}
-
-function addText(parent, tag, text, className = "") {
-  const el = document.createElement(tag);
-  el.textContent = text == null ? "" : String(text);
-  if (className) el.className = className;
-  parent.appendChild(el);
-  return el;
-}
-
-function clear(id) {
-  const el = $(id);
-  if (el) el.replaceChildren();
-}
-
-function friendlyError(error) {
-  const messages = {
-    "auth/email-already-in-use": "This email already has an account. Please log in.",
-    "auth/invalid-email": "Please enter a valid email address.",
-    "auth/weak-password": "Please choose a stronger password with at least 6 characters.",
-    "auth/invalid-credential": "Email or password is incorrect. Please try again.",
-    "auth/user-not-found": "No account was found. Please create an account first.",
-    "auth/wrong-password": "Email or password is incorrect.",
-    "auth/too-many-requests": "Too many attempts. Please wait a little and try again.",
-    "permission-denied": "You don't have permission to do that.",
-    "unavailable": "Connection problem. Check your internet and try again."
-  };
-  return messages[error.code] || "Something went wrong. Please try again.";
-}
-
-// PAGE NAVIGATION
-function openPage(pageId) {
+function showPage(pageId) {
   document.querySelectorAll(".screen").forEach(page => {
-    page.classList.toggle("hidden", page.id !== pageId);
+    page.classList.add("hidden");
   });
 
-  document.querySelectorAll(".nav-button").forEach(button => {
+  const page = $(pageId);
+  if (page) page.classList.remove("hidden");
+
+  document.querySelectorAll("[data-page]").forEach(button => {
     button.classList.toggle("active", button.dataset.page === pageId);
   });
 
-  window.scrollTo({ top: 0, behavior: "smooth" });
+  const titles = {
+    homePage: "Your creative community",
+    discoverPage: "Discover creators",
+    supportPage: "Creator support",
+    createPage: "Create and submit",
+    messagesPage: "Messages",
+    profilePage: "Your profile",
+    ownerProfilePage: "Official BLISS profile"
+  };
+
+  if ($("topLabel")) {
+    $("topLabel").textContent = titles[pageId] || "BLISS";
+  }
+
+  if (pageId === "discoverPage") {
+    loadDirectory();
+    loadCollabs();
+  }
+
+  if (pageId === "supportPage") loadSupport();
+  if (pageId === "homePage") loadHome();
+  if (pageId === "messagesPage") loadMessages();
+  if (pageId === "resourcesPage") loadResources();
+  if (pageId === "ownerProfilePage") loadOwnerPosts();
 }
 
 document.querySelectorAll("[data-page]").forEach(button => {
-  button.addEventListener("click", () => openPage(button.dataset.page));
+  button.addEventListener("click", () => showPage(button.dataset.page));
 });
 
-// INSTAGRAM LINK VALIDATION
-function safeInstagramLink(value) {
-  try {
-    const url = new URL(value);
-    if (
-      url.protocol === "https:" &&
-      ["www.instagram.com", "instagram.com"].includes(url.hostname)
-    ) {
-      return url.href;
-    }
-  } catch (_) {}
-  return "";
+function isOwner() {
+  return currentUser && currentUser.uid === OWNER_UID;
 }
 
-// MEMBER DIRECTORY
-function renderProfiles(snapshot, targetId, ownerView = false) {
-  const target = $(targetId);
-  if (!target) return;
+function setLoggedInUI(user) {
+  if ($("authPanel")) $("authPanel").classList.add("hidden");
+  if ($("appArea")) $("appArea").classList.remove("hidden");
 
-  clear(targetId);
+  if ($("ownerPanel")) {
+    $("ownerPanel").classList.toggle("hidden", user.uid !== OWNER_UID);
+  }
 
-  if (snapshot.empty) {
-    addText(target, "p", "No profiles yet.", "muted");
+  if ($("roleLabel")) {
+    $("roleLabel").textContent = user.uid === OWNER_UID
+      ? "BLISS OWNER"
+      : "BLISS MEMBER";
+  }
+
+  if ($("welcomeTitle")) {
+    $("welcomeTitle").textContent = user.uid === OWNER_UID
+      ? "Welcome back, Samra"
+      : "Welcome to BLISS";
+  }
+
+  if ($("accountNote")) {
+    $("accountNote").textContent = user.uid === OWNER_UID
+      ? "You are signed in as the BLISS owner."
+      : "Your creative space is ready.";
+  }
+
+  showPage("homePage");
+}
+
+function setLoggedOutUI() {
+  if ($("authPanel")) $("authPanel").classList.remove("hidden");
+  if ($("appArea")) $("appArea").classList.add("hidden");
+  if ($("ownerPanel")) $("ownerPanel").classList.add("hidden");
+}
+
+function makeCard(title, body, date = "", link = "") {
+  const card = document.createElement("article");
+  card.className = "data-item";
+
+  const heading = document.createElement("h3");
+  heading.textContent = title || "BLISS update";
+
+  const paragraph = document.createElement("p");
+  paragraph.textContent = body || "";
+
+  card.append(heading, paragraph);
+
+  if (link) {
+    const anchor = document.createElement("a");
+    anchor.href = link;
+    anchor.target = "_blank";
+    anchor.rel = "noopener noreferrer";
+    anchor.textContent = "Open link";
+    card.append(anchor);
+  }
+
+  if (date) {
+    const small = document.createElement("small");
+    small.textContent = date;
+    card.append(small);
+  }
+
+  return card;
+}
+
+function showList(id, items, emptyText) {
+  const container = $(id);
+  if (!container) return;
+
+  container.replaceChildren();
+
+  if (!items.length) {
+    const empty = document.createElement("p");
+    empty.className = "muted";
+    empty.textContent = emptyText;
+    container.append(empty);
     return;
   }
 
-  snapshot.forEach(item => {
-    const data = item.data();
-    const card = document.createElement("article");
-    card.className = "data-item";
-
-    addText(card, "strong", data.handle || "BLISS member");
-
-    if (data.bio) addText(card, "p", data.bio);
-
-    const link = safeInstagramLink(data.instagramUrl || "");
-
-    if (link) {
-      const anchor = document.createElement("a");
-      anchor.href = link;
-      anchor.target = "_blank";
-      anchor.rel = "noopener noreferrer";
-      anchor.textContent = "View Instagram profile";
-      card.appendChild(anchor);
-    }
-
-    if (ownerView) {
-      addText(card, "small", "Community member");
-    }
-
-    target.appendChild(card);
-  });
+  items.forEach(item => container.append(item));
 }
 
-// OFFICIAL ANNOUNCEMENTS
-function startAnnouncementListener() {
-  if (stopAnnouncements) stopAnnouncements();
+function dateLabel(timestamp) {
+  if (!timestamp || !timestamp.toDate) return "";
+  return timestamp.toDate().toLocaleDateString();
+}
 
-  const updatesQuery = query(
-    collection(db, "announcements"),
-    orderBy("createdAt", "desc")
+async function readCollection(name, max = 40) {
+  const result = await getDocs(
+    query(collection(db, name), limit(max))
   );
 
-  stopAnnouncements = onSnapshot(updatesQuery, snapshot => {
-    clear("announcements");
-
-    if (snapshot.empty) {
-      addText($("announcements"), "p", "No official updates yet.", "muted");
-      return;
-    }
-
-    snapshot.forEach(item => {
-      const data = item.data();
-      const card = document.createElement("article");
-      card.className = "data-item";
-
-      addText(card, "strong", data.title || "BLISS update");
-      addText(card, "p", data.body || "");
-      addText(card, "small", "Official BLISS announcement");
-
-      $("announcements").appendChild(card);
-    });
-  }, error => {
-    say("authMessage", friendlyError(error));
-  });
+  return result.docs.map(item => ({
+    id: item.id,
+    ...item.data()
+  }));
 }
 
-// MEMBER DIRECTORY LISTENER
-function startDirectoryListener(isOwner) {
-  if (stopDirectory) stopDirectory();
+// HOME AND ANNOUNCEMENTS
 
-  stopDirectory = onSnapshot(
-    collection(db, "publicProfiles"),
-    snapshot => {
-      renderProfiles(snapshot, "directory");
-
-      if (isOwner) {
-        renderProfiles(snapshot, "ownerDirectory", true);
-      }
-    },
-    error => say("profileMessage", friendlyError(error))
-  );
-}
-
-// OWNER HELP DESK INBOX
-function startOwnerHelpListener() {
-  if (stopOwnerHelp) stopOwnerHelp();
-
-  const helpQuery = query(
-    collection(db, "helpRequests"),
-    orderBy("createdAt", "desc")
-  );
-
-  stopOwnerHelp = onSnapshot(helpQuery, snapshot => {
-    clear("ownerHelp");
-
-    if (snapshot.empty) {
-      addText($("ownerHelp"), "p", "No questions received yet.", "muted");
-      return;
-    }
-
-    snapshot.forEach(item => {
-      const data = item.data();
-      const card = document.createElement("article");
-      card.className = "data-item";
-
-      addText(card, "strong", "Member question");
-      addText(card, "p", data.message || "");
-      addText(card, "small", "Request ID: " + item.id);
-
-      $("ownerHelp").appendChild(card);
-    });
-  }, error => {
-    say("announcementStatus", friendlyError(error));
-  });
-}
-
-// CREATE ACCOUNT
-$("signup").addEventListener("click", async () => {
-  const email = $("email").value.trim();
-  const password = $("password").value;
-
-  if (!email || password.length < 6) {
-    say("authMessage", "Enter a valid email and a password of at least 6 characters.");
-    return;
-  }
-
-  say("authMessage", "Creating your account...");
-
+async function loadHome() {
   try {
-    await createUserWithEmailAndPassword(auth, email, password);
-  } catch (error) {
-    say("authMessage", friendlyError(error));
-  }
-});
+    const announcements = await readCollection("announcements");
 
-// LOG IN
-$("login").addEventListener("click", async () => {
-  const email = $("email").value.trim();
-  const password = $("password").value;
-
-  if (!email || !password) {
-    say("authMessage", "Enter your email and password.");
-    return;
-  }
-
-  say("authMessage", "Logging in...");
-
-  try {
-    await signInWithEmailAndPassword(auth, email, password);
-  } catch (error) {
-    say("authMessage", friendlyError(error));
-  }
-});
-
-// LOG OUT
-$("logout").addEventListener("click", async () => {
-  try {
-    await signOut(auth);
-  } catch (error) {
-    say("profileMessage", friendlyError(error));
-  }
-});
-
-// SAVE PROFILE
-$("saveProfile").addEventListener("click", async () => {
-  if (!currentUser) return;
-
-  const handle = $("igHandle").value.trim().replace(/^@/, "");
-  const instagramUrl = $("igLink").value.trim();
-  const bio = $("profileBio").value.trim();
-
-  if (handle && !/^[A-Za-z0-9._]{1,30}$/.test(handle)) {
-    say("profileMessage", "Enter a valid Instagram username.");
-    return;
-  }
-
-  if (instagramUrl && !safeInstagramLink(instagramUrl)) {
-    say("profileMessage", "Enter a valid Instagram profile link.");
-    return;
-  }
-
-  say("profileMessage", "Saving...");
-
-  try {
-    await setDoc(
-      doc(db, "publicProfiles", currentUser.uid),
-      {
-        handle: handle ? "@" + handle : "",
-        instagramUrl,
-        bio,
-        updatedAt: serverTimestamp()
-      },
-      { merge: true }
+    announcements.sort((a, b) =>
+      (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0)
     );
 
-    say("profileMessage", "Your profile has been saved.");
+    showList(
+      "announcements",
+      announcements.map(item =>
+        makeCard(item.title, item.body, dateLabel(item.createdAt))
+      ),
+      "No announcements yet. Check back soon."
+    );
   } catch (error) {
-    say("profileMessage", "Could not save: " + friendlyError(error));
+    console.error("Announcements:", error);
   }
-});
-
-// SEND QUESTION TO OWNER
-$("sendHelp").addEventListener("click", async () => {
-  if (!currentUser) return;
-
-  const message = $("helpMessage").value.trim();
-
-  if (message.length < 5) {
-    say("helpStatus", "Please write at least 5 characters.");
-    return;
-  }
-
-  say("helpStatus", "Sending your question...");
 
   try {
-    await addDoc(collection(db, "helpRequests"), {
-      uid: currentUser.uid,
-      message,
-      status: "new",
-      createdAt: serverTimestamp()
-    });
+    const voices = await readCollection("voiceAnnouncements");
+    const container = $("voiceAnnouncements");
 
-    $("helpMessage").value = "";
-    say("helpStatus", "Your question has been sent to the BLISS owner.");
+    if (container) {
+      container.replaceChildren();
+
+      voices.forEach(item => {
+        const card = makeCard(item.title, item.description || "");
+
+        if (item.url) {
+          const audio = document.createElement("audio");
+          audio.controls = true;
+          audio.preload = "none";
+          audio.src = item.url;
+          card.append(audio);
+        }
+
+        container.append(card);
+      });
+
+      if (!voices.length) {
+        container.textContent = "No voice announcements yet.";
+      }
+    }
   } catch (error) {
-    say("helpStatus", "Could not send: " + friendlyError(error));
+    console.error("Voice announcements:", error);
   }
-});
+}
 
-// OWNER PUBLISHES OFFICIAL UPDATE
-$("publishAnnouncement").addEventListener("click", async () => {
-  if (!currentUser || currentUser.uid !== OWNER_UID) {
-    say("announcementStatus", "Owner access required.");
-    return;
-  }
+// SIGN UP AND LOGIN
 
-  const title = $("announcementTitle").value.trim();
-  const body = $("announcementBody").value.trim();
+if ($("signup")) {
+  $("signup").addEventListener("click", async () => {
+    const email = $("email")?.value.trim();
+    const password = $("password")?.value;
 
-  if (!title || !body) {
-    say("announcementStatus", "Enter both a title and a message.");
-    return;
-  }
+    if (!email || !password) {
+      showMessage("authMessage", "Enter your email and password.");
+      return;
+    }
 
-  say("announcementStatus", "Publishing...");
+    try {
+      await createUserWithEmailAndPassword(auth, email, password);
+      showMessage("authMessage", "Account created successfully.");
+    } catch (error) {
+      showMessage("authMessage", error.message);
+    }
+  });
+}
 
-  try {
-    await addDoc(collection(db, "announcements"), {
-      title,
-      body,
-      authorUid: currentUser.uid,
-      createdAt: serverTimestamp()
-    });
+if ($("login")) {
+  $("login").addEventListener("click", async () => {
+    const email = $("email")?.value.trim();
+    const password = $("password")?.value;
 
-    $("announcementTitle").value = "";
-    $("announcementBody").value = "";
+    if (!email || !password) {
+      showMessage("authMessage", "Enter your email and password.");
+      return;
+    }
 
-    say("announcementStatus", "Your official update is published.");
-  } catch (error) {
-    say("announcementStatus", "Could not publish: " + friendlyError(error));
-  }
-});
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+    } catch (error) {
+      showMessage("authMessage", error.message);
+    }
+  });
+}
 
-// AUTHENTICATION STATE
+if ($("logout")) {
+  $("logout").addEventListener("click", () => signOut(auth));
+}
+
 onAuthStateChanged(auth, async user => {
   currentUser = user;
 
-  show("authPanel", !user);
-  show("appArea", !!user);
-  show("bottomNav", !!user);
-
   if (!user) {
-    show("ownerPanel", false);
-
-    [stopDirectory, stopAnnouncements, stopOwnerHelp].forEach(stop => {
-      if (stop) stop();
-    });
-
-    stopDirectory = null;
-    stopAnnouncements = null;
-    stopOwnerHelp = null;
-
+    setLoggedOutUI();
     return;
   }
 
-  const isOwner = user.uid === OWNER_UID;
+  setLoggedInUI(user);
+  await loadProfile();
+  await loadHome();
+  await loadResources();
+  await loadCollabs();
+  await loadSupport();
+  await loadOwnerPosts();
+  await loadOwnerAvatar();
+});
 
-  $("roleLabel").textContent = isOwner ? "BLISS OWNER" : "BLISS MEMBER";
-  $("welcomeTitle").textContent = isOwner
-    ? "Samra's BLISS profile"
-    : "My BLISS profile";
+// MEMBER PROFILE
 
-  $("accountNote").textContent = isOwner
-    ? "You are signed in as the official owner."
-    : "Welcome to the BLISS community.";
-
-  $("topLabel").textContent = isOwner
-    ? "Founder & Owner"
-    : "Creative community";
-
-  show("ownerPanel", isOwner);
-  openPage("homePage");
+async function loadProfile() {
+  if (!currentUser) return;
 
   try {
-    const profileSnapshot = await getDoc(
-      doc(db, "publicProfiles", user.uid)
+    const result = await getDoc(
+      doc(db, "publicProfiles", currentUser.uid)
     );
 
-    const data = profileSnapshot.exists()
-      ? profileSnapshot.data()
-      : {};
+    if (!result.exists()) return;
 
-    $("igHandle").value = data.handle || "";
-    $("igLink").value = data.instagramUrl || "";
-    $("profileBio").value = data.bio || "";
+    const data = result.data();
+
+    if ($("igHandle")) $("igHandle").value = data.handle || "";
+    if ($("igLink")) $("igLink").value = data.instagramUrl || "";
+    if ($("profileBio")) $("profileBio").value = data.bio || "";
   } catch (error) {
-    say("profileMessage", "Profile could not load: " + friendlyError(error));
+    console.error("Profile:", error);
   }
+}
 
-  startDirectoryListener(isOwner);
-  startAnnouncementListener();
+if ($("saveProfile")) {
+  $("saveProfile").addEventListener("click", async () => {
+    if (!currentUser) return;
 
-  if (isOwner) {
-    startOwnerHelpListener();
+    const handle = $("igHandle")?.value.trim() || "";
+    const instagramUrl = $("igLink")?.value.trim() || "";
+    const bio = $("profileBio")?.value.trim() || "";
+
+    if (handle.length > 40 || bio.length > 250) {
+      showMessage("profileMessage", "Please shorten your profile details.");
+      return;
+    }
+
+    if (instagramUrl &&
+      !/^https:\/\/(www\.)?instagram\.com\//i.test(instagramUrl)) {
+      showMessage("profileMessage", "Enter a valid Instagram profile link.");
+      return;
+    }
+
+    try {
+      await setDoc(
+        doc(db, "publicProfiles", currentUser.uid),
+        {
+          handle,
+          instagramUrl,
+          bio,
+          updatedAt: serverTimestamp()
+        },
+        { merge: true }
+      );
+
+      showMessage("profileMessage", "Profile saved.");
+    } catch (error) {
+      showMessage("profileMessage", "Could not save: " + error.message);
+    }
+  });
+}
+
+// MEMBER DIRECTORY
+
+async function loadDirectory(searchTerm = "") {
+  try {
+    const profiles = await readCollection("publicProfiles", 100);
+    const term = searchTerm.toLowerCase();
+
+    const filtered = profiles.filter(profile =>
+      profile.id !== currentUser?.uid &&
+      `${profile.handle || ""} ${profile.bio || ""}`
+        .toLowerCase()
+        .includes(term)
+    );
+
+    showList(
+      "directory",
+      filtered.map(profile => {
+        const card = makeCard(
+          profile.handle || "BLISS member",
+          profile.bio || "Creative community member"
+        );
+
+        if (profile.instagramUrl) {
+          const link = document.createElement("a");
+          link.href = profile.instagramUrl;
+          link.target = "_blank";
+          link.rel = "noopener noreferrer";
+          link.textContent = "Instagram profile";
+          card.append(link);
+        }
+
+        const messageButton = document.createElement("button");
+        messageButton.textContent = "Request message";
+        messageButton.className = "button-soft";
+
+        messageButton.addEventListener("click", () => {
+          if ($("messageRecipient")) {
+            $("messageRecipient").value = profile.handle || "";
+          }
+          showPage("messagesPage");
+        });
+
+        card.append(messageButton);
+        return card;
+      }),
+      "No members found yet."
+    );
+  } catch (error) {
+    console.error("Directory:", error);
   }
-});
+}
+
+if ($("memberSearch")) {
+  $("memberSearch").addEventListener("input", event => {
+    loadDirectory(event.target.value.trim());
+  });
+}
+
+// OWNER WRITTEN ANNOUNCEMENTS
+
+if ($("publishAnnouncement")) {
+  $("publishAnnouncement").addEventListener("click", async () => {
+    if (!isOwner()) return;
+
+    const title = $("announcementTitle")?.value.trim();
+    const body = $("announcementBody")?.value.trim();
+
+    if (!title || !body) {
+      showMessage("announcementStatus", "Add a title and announcement.");
+      return;
+    }
+
+    try {
+      await addDoc(collection(db, "announcements"), {
+        title,
+        body,
+        authorUid: currentUser.uid,
+        createdAt: serverTimestamp()
+      });
+
+      $("announcementTitle").value = "";
+      $("announcementBody").value = "";
+      showMessage("announcementStatus", "Announcement published.");
+      loadHome();
+    } catch (error) {
+      showMessage("announcementStatus", "Could not publish: " + error.message);
+    }
+  });
+}
+
+// OWNER VOICE ANNOUNCEMENTS
+// Add a public audio link; direct audio upload is not included.
+
+if ($("publishVoice")) {
+  $("publishVoice").addEventListener("click", async () => {
+    if (!isOwner()) return;
+
+    const title = $("voiceTitle")?.value.trim();
+    const url = $("voiceUrl")?.value.trim();
+
+    if (!title || !url || !/^https:\/\//i.test(url)) {
+      showMessage("voiceStatus", "Enter a title and secure audio link.");
+      return;
+    }
+
+    try {
+      await addDoc(collection(db, "voiceAnnouncements"), {
+        title,
+        url,
+        description: "",
+        authorUid: currentUser.uid,
+        createdAt: serverTimestamp()
+      });
+
+      $("voiceTitle").value = "";
+      $("voiceUrl").value = "";
+      showMessage("voiceStatus", "Voice announcement published.");
+      loadHome();
+    } catch (error) {
+      showMessage("voiceStatus", "Could not publish: " + error.message);
+    }
+  });
+}
+
+// RESOURCE LIBRARY
+
+async function loadResources() {
+  try {
+    const resources = await readCollection("resources", 100);
+
+    showList(
+      "resourceLibrary",
+      resources.map(item =>
+        makeCard(item.title, item.category || "Editing resource", "", item.url)
+      ),
+      "No resources have been added yet."
+    );
+  } catch (error) {
+    console.error("Resources:", error);
+  }
+}
+
+if ($("publishResource")) {
+  $("publishResource").addEventListener("click", async () => {
+    if (!isOwner()) return;
+
+    const title = $("resourceTitle")?.value.trim();
+    const category = $("resourceCategory")?.value.trim();
+    const url = $("resourceUrl")?.value.trim();
+
+    if (!title || !url || !/^https:\/\//i.test(url)) {
+      showMessage("resourceStatus", "Add a title and secure resource link.");
+      return;
+    }
+
+    try {
+      await addDoc(collection(db, "resources"), {
+        title,
+        category: category || "Editing resource",
+        url,
+        authorUid: currentUser.uid,
+        createdAt: serverTimestamp()
+      });
+
+      $("resourceTitle").value = "";
+      $("resourceCategory").value = "";
+      $("resourceUrl").value = "";
+
+      showMessage("resourceStatus", "Resource added.");
+      loadResources();
+    } catch (error) {
+      showMessage("resourceStatus", "Could not add resource: " + error.message);
+    }
+  });
+}
+
+// COLLABORATION BOARD
+
+async function loadCollabs() {
+  try {
+    const items = await readCollection("collabs", 60);
+
+    showList(
+      "collabBoard",
+      items.map(item =>
+        makeCard(
+          `${item.type || "Collaboration"} — ${item.handle || "Member"}`,
+          item.details || "",
+          dateLabel(item.createdAt)
+        )
+      ),
+      "No collaboration posts yet."
+    );
+  } catch (error) {
+    console.error("Collaborations:", error);
+  }
+}
+
+if ($("postCollab")) {
+  $("postCollab").addEventListener("click", async () => {
+    if (!currentUser) return;
+
+    const type = $("collabType")?.value || "Collaboration";
+    const details = $("collabDetails")?.value.trim();
+
+    if (!details || details.length < 5) {
+      showMessage("collabStatus", "Write more about your collaboration.");
+      return;
+    }
+
+    try {
+      await addDoc(collection(db, "collabs"), {
+        uid: currentUser.uid,
+        handle: $("igHandle")?.value.trim() || "BLISS member",
+        type,
+        details,
+        createdAt: serverTimestamp()
+      });
+
+      $("collabDetails").value = "";
+      showMessage("collabStatus", "Your collaboration post is live.");
+      loadCollabs();
+    } catch (error) {
+      showMessage("collabStatus", "Could not post: " + error.message);
+    }
+  });
+}
+
+// FOLLOW-FOR-FOLLOW SUPPORT BOARD
+
+async function loadSupport() {
+  try {
+    const items = await readCollection("supportPosts", 80);
+
+    showList(
+      "supportBoard",
+      items.map(item =>
+        makeCard(
+          `${item.handle || "Member"} · ${item.type || "Support"}`,
+          "Visit their profile and support each other respectfully.",
+          dateLabel(item.createdAt),
+          item.link
+        )
+      ),
+      "No support members yet."
+    );
+  } catch (error) {
+    console.error("Support:", error);
+  }
+}
+
+if ($("joinSupport")) {
+  $("joinSupport").addEventListener("click", async () => {
+    if (!currentUser) return;
+
+    const handle = $("supportHandle")?.value.trim();
+    const link = $("supportLink")?.value.trim();
+    const type = $("supportType")?.value || "Mutual support";
+
+    if (!handle || !link ||
+      !/^https:\/\/(www\.)?instagram\.com\//i.test(link)) {
+      showMessage("supportStatus", "Enter your Instagram username and profile link.");
+      return;
+    }
+
+    try {
+      await addDoc(collection(db, "supportPosts"), {
+        uid: currentUser.uid,
+        handle,
+        link,
+        type,
+        createdAt: serverTimestamp()
+      });
+
+      showMessage("supportStatus", "Your support post has been added.");
+      loadSupport();
+    } catch (error) {
+      showMessage("supportStatus", "Could not join: " + error.message);
+    }
+  });
+}
+
+// HELP DESK
+
+if ($("sendHelp")) {
+  $("sendHelp").addEventListener("click", async () => {
+    if (!currentUser) return;
+
+    const message = $("helpMessage")?.value.trim();
+
+    if (!message || message.length < 5) {
+      showMessage("helpStatus", "Please write your message first.");
+      return;
+    }
+
+    try {
+      await addDoc(collection(db, "helpRequests"), {
+        uid: currentUser.uid,
+        message,
+        status: "new",
+        createdAt: serverTimestamp()
+      });
+
+      $("helpMessage").value = "";
+      showMessage("helpStatus", "Your help request has been sent.");
+    } catch (error) {
+      showMessage("helpStatus", "Could not send: " + error.message);
+    }
+  });
+}
+
+// EDIT SUBMISSIONS
+
+if ($("submitEdit")) {
+  $("submitEdit").addEventListener("click", async () => {
+    if (!currentUser) return;
+
+    const link = $("editSubmissionLink")?.value.trim();
+    const note = $("editSubmissionNote")?.value.trim() || "";
+
+    if (!link || !/^https:\/\//i.test(link)) {
+      showMessage("submissionStatus", "Enter a valid link to your edit.");
+      return;
+    }
+
+    try {
+      await addDoc(collection(db, "editSubmissions"), {
+        uid: currentUser.uid,
+        link,
+        note,
+        status: "new",
+        createdAt: serverTimestamp()
+      });
+
+      $("editSubmissionLink").value = "";
+      $("editSubmissionNote").value = "";
+      showMessage("submissionStatus", "Your edit has been submitted.");
+    } catch (error) {
+      showMessage("submissionStatus", "Could not submit: " + error.message);
+    }
+  });
+}
+
+// OWNER OFFICIAL POSTS
+
+async function loadOwnerPosts() {
+  try {
+    const posts = await readCollection("ownerPosts", 50);
+
+    posts.sort((a, b) =>
+      (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0)
+    );
+
+    const container = $("ownerPosts");
+    if (!container) return;
+
+    container.replaceChildren();
+
+    posts.forEach(post => {
+      const card = makeCard(
+        post.title,
+        post.caption,
+        dateLabel(post.createdAt)
+      );
+
+      if (post.imageUrl) {
+        const image = document.createElement("img");
+        image.src = post.imageUrl;
+        image.alt = post.title || "BLISS post";
+        image.loading = "lazy";
+        card.prepend(image);
+      }
+
+      container.append(card);
+    });
+
+    if (!posts.length) {
+      container.textContent = "Official BLISS posts will appear here.";
+    }
+  } catch (error) {
+    console.error("Owner posts:", error);
+  }
+}
+
+if ($("publishPost")) {
+  $("publishPost").addEventListener("click", async () => {
+    if (!isOwner()) return;
+
+    const title = $("postTitle")?.value.trim();
+    const imageUrl = $("postImageUrl")?.value.trim();
+    const caption = $("postCaption")?.value.trim();
+
+    if (!title || !caption) {
+      showMessage("postStatus", "Add a post title and caption.");
+      return;
+    }
+
+    if (imageUrl && !/^https:\/\//i.test(imageUrl)) {
+      showMessage("postStatus", "Image link must start with https://");
+      return;
+    }
+
+    try {
+      await addDoc(collection(db, "ownerPosts"), {
+        title,
+        imageUrl,
+        caption,
+        authorUid: currentUser.uid,
+        createdAt: serverTimestamp()
+      });
+
+      $("postTitle").value = "";
+      $("postImageUrl").value = "";
+      $("postCaption").value = "";
+
+      showMessage("postStatus", "Official post published.");
+      loadOwnerPosts();
+    } catch (error) {
+      showMessage("postStatus", "Could not publish: " + error.message);
+    }
+  });
+}
+
+// OWNER AVATAR
+
+async function loadOwnerAvatar() {
+  try {
+    const result = await getDoc(doc(db, "siteSettings", "owner"));
+    if (!result.exists()) return;
+
+    const url = result.data().avatarUrl;
+    if (!url) return;
+
+    if ($("officialAvatar")) $("officialAvatar").src = url;
+    if ($("ownerAvatarUrl")) $("ownerAvatarUrl").value = url;
+  } catch (error) {
+    console.error("Owner avatar:", error);
+  }
+}
+
+if ($("saveOwnerAvatar")) {
+  $("saveOwnerAvatar").addEventListener("click", async () => {
+    if (!isOwner()) return;
+
+    const url = $("ownerAvatarUrl")?.value.trim();
+
+    if (!url || !/^https:\/\//i.test(url)) {
+      showMessage("avatarStatus", "Enter a valid image link.");
+      return;
+    }
+
+    try {
+      await setDoc(
+        doc(db, "siteSettings", "owner"),
+        {
+          avatarUrl: url,
+          updatedAt: serverTimestamp()
+        },
+        { merge: true }
+      );
+
+      if ($("officialAvatar")) $("officialAvatar").src = url;
+      showMessage("avatarStatus", "Avatar link saved.");
+    } catch (error) {
+      showMessage("avatarStatus", "Could not save avatar: " + error.message);
+    }
+  });
+}
+
+// MESSAGE REQUESTS
+// Private conversations remain disabled until secure rules are added.
+
+if ($("sendMessageRequest")) {
+  $("sendMessageRequest").addEventListener("click", async () => {
+    if (!currentUser) return;
+
+    const handle = $("messageRecipient")?.value.trim().replace(/^@/, "");
+    const message = $("messageRequestText")?.value.trim();
+
+    if (!handle || !message) {
+      showMessage("messageRequestStatus", "Enter a username and message.");
+      return;
+    }
+
+    try {
+      const profiles = await getDocs(
+        query(collection(db, "publicProfiles"), limit(100))
+      );
+
+      const match = profiles.docs.find(item =>
+        (item.data().handle || "").replace(/^@/, "").toLowerCase() ===
+        handle.toLowerCase()
+      );
+
+      if (!match) {
+        showMessage("messageRequestStatus", "Member not found. Check the username.");
+        return;
+      }
+
+      if (match.id === currentUser.uid) {
+        showMessage("messageRequestStatus", "You cannot message yourself.");
+        return;
+      }
+
+      await addDoc(collection(db, "messageRequests"), {
+        fromUid: currentUser.uid,
+        toUid: match.id,
+        message,
+        status: "pending",
+        createdAt: serverTimestamp()
+      });
+
+      $("messageRequestText").value = "";
+      showMessage("messageRequestStatus", "Message request sent.");
+      loadMessages();
+    } catch (error) {
+      showMessage("messageRequestStatus", "Could not send request: " + error.message);
+    }
+  });
+}
+
+async function loadMessages() {
+  if (!currentUser) return;
+
+  try {
+    const requests = await getDocs(
+      query(
+        collection(db, "messageRequests"),
+        where("toUid", "==", currentUser.uid),
+        limit(40)
+      )
+    );
+
+    const sent = await getDocs(
+      query(
+        collection(db, "messageRequests"),
+        where("fromUid", "==", currentUser.uid),
+        limit(40)
+      )
+    );
+
+    const cards = [];
+
+    requests.docs.forEach(item => {
+      const data = item.data();
+
+      if (data.status !== "pending") return;
+
+      const card = makeCard("New message request", data.message || "");
+
+      const note = document.createElement("p");
+      note.textContent = "Request from a BLISS member";
+      card.append(note);
+
+      cards.push(card);
+    });
+
+    sent.docs.forEach(item => {
+      if (item.data().status === "pending") {
+        cards.push(makeCard(
+          "Request sent",
+          "Waiting for the member to respond."
+        ));
+      }
+    });
+
+    showList("messageRequests", cards, "No new message requests.");
+
+    showList(
+      "conversations",
+      [],
+      "Private chats are not enabled yet."
+    );
+  } catch (error) {
+    console.error("Messages:", error);
+  }
+}
+
+// FINAL INITIALIZATION
+
+console.log("BLISS app loaded.");
+
