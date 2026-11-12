@@ -11,6 +11,7 @@
     <div class="brand">BLISS<span>.</span></div>
     <div class="owner">Samra · Founder &amp; Owner</div>
   </header>
+
   <main class="wrap">
     <section class="hero">
       <p class="eyebrow">A creative home for editors &amp; fanpages</p>
@@ -18,11 +19,15 @@
       <p class="intro">Find collaborators, exchange genuine support, discover editing resources and get help with your edits.</p>
     </section>
 
-    <section class="panel auth-panel">
+    <section id="authPanel" class="panel auth-panel">
       <h2>Join BLISS</h2>
       <p class="muted">Create a BLISS account or sign in. This is separate from Instagram.</p>
-      <label>Email<input id="email" type="email" autocomplete="email" placeholder="you@example.com"></label>
-      <label>Password<input id="password" type="password" autocomplete="new-password" placeholder="At least 6 characters"></label>
+      <label>Email
+        <input id="email" type="email" autocomplete="email" placeholder="you@example.com">
+      </label>
+      <label>Password
+        <input id="password" type="password" autocomplete="current-password" placeholder="At least 6 characters">
+      </label>
       <div class="actions">
         <button id="signup">Create account</button>
         <button id="login" class="secondary">Log in</button>
@@ -32,20 +37,93 @@
 
     <section id="memberArea" class="hidden">
       <div class="panel welcome">
-        <div><p class="eyebrow">MEMBER DASHBOARD</p><h2 id="welcomeTitle">Welcome to BLISS</h2><p id="memberEmail" class="muted"></p></div>
+        <div>
+          <p class="eyebrow" id="roleLabel">MEMBER DASHBOARD</p>
+          <h2 id="welcomeTitle">Welcome to BLISS</h2>
+          <p class="muted" id="accountNote">Your BLISS account is ready.</p>
+        </div>
         <button id="logout" class="secondary small">Log out</button>
       </div>
+
       <div class="grid">
-        <article class="tile"><h3>Collaborators</h3><p>Find editors and fanpage partners. Coming next.</p></article>
-        <article class="tile"><h3>Support System</h3><p>Like, comment, follow and share through genuine community support. Coming next.</p></article>
-        <article class="tile"><h3>Editing Stuff</h3><p>Discover backgrounds, overlays, fonts and resources. Coming next.</p></article>
-        <article class="tile"><h3>Editing Help Desk</h3><p>Send Samra an editing question. Coming next.</p></article>
-        <article class="tile"><h3>BLISS Official Updates</h3><p>Official announcements from Samra. Coming next.</p></article>
-        <article class="tile"><h3>BLISS Circle</h3><p>A community space for editors and fanpages. Coming next.</p></article>
+        <article class="tile">
+          <h3>My Profile</h3>
+          <p>Add your public Instagram editing or fanpage details.</p>
+          <label>Instagram username
+            <input id="igHandle" maxlength="30" placeholder="@yourusername">
+          </label>
+          <label>Instagram profile link
+            <input id="igLink" type="url" maxlength="200" placeholder="https://www.instagram.com/yourusername/">
+          </label>
+          <label>About your page
+            <input id="profileBio" maxlength="120" placeholder="What kind of edits do you make?">
+          </label>
+          <button id="saveProfile">Save profile</button>
+          <p id="profileMessage" class="message" aria-live="polite"></p>
+        </article>
+
+        <article class="tile">
+          <h3>Collaborators</h3>
+          <p>Discover other BLISS editors and fanpages.</p>
+          <div id="directory" class="data-list">Loading members...</div>
+        </article>
+
+        <article class="tile">
+          <h3>Editing Help Desk</h3>
+          <p>Send an editing question to the BLISS owner.</p>
+          <label>Your question
+            <textarea id="helpMessage" maxlength="1000" rows="4" placeholder="Tell us what you need help with..."></textarea>
+          </label>
+          <button id="sendHelp">Send request</button>
+          <p id="helpStatus" class="message" aria-live="polite"></p>
+        </article>
+
+        <article class="tile">
+          <h3>BLISS Official Updates</h3>
+          <p>Announcements from the owner.</p>
+          <div id="announcements" class="data-list">Loading updates...</div>
+        </article>
+
+        <article class="tile">
+          <h3>Editing Stuff</h3>
+          <p>Resource collections will be added in a later update. Never download files from links you don't trust.</p>
+        </article>
+
+        <article class="tile">
+          <h3>BLISS Circle</h3>
+          <p>Community features are being prepared with privacy and moderation in mind.</p>
+        </article>
       </div>
+
+      <section id="ownerPanel" class="panel hidden owner-panel">
+        <p class="eyebrow">OWNER CONTROL PANEL</p>
+        <h2>BLISS Administration</h2>
+        <p class="muted">Only the official owner account can publish announcements and view the member directory here.</p>
+
+        <h3>Publish an announcement</h3>
+        <label>Announcement title
+          <input id="announcementTitle" maxlength="80" placeholder="Announcement title">
+        </label>
+        <label>Message
+          <textarea id="announcementBody" maxlength="1500" rows="4" placeholder="Write an official BLISS update..."></textarea>
+        </label>
+        <button id="publishAnnouncement">Publish update</button>
+        <p id="announcementStatus" class="message" aria-live="polite"></p>
+
+        <h3>Registered public profiles</h3>
+        <div id="ownerDirectory" class="data-list">Loading...</div>
+
+        <h3>Help requests</h3>
+        <div id="ownerHelp" class="data-list">Loading...</div>
+      </section>
     </section>
-    <footer>BLISS · Made for editors and fanpages · <a href="https://www.instagram.com/your_edits_are_bliss/" target="_blank" rel="noopener">@your_edits_are_bliss</a></footer>
+
+    <footer>
+      BLISS · Made for editors and fanpages ·
+      <a href="https://www.instagram.com/your_edits_are_bliss/" target="_blank" rel="noopener">@your_edits_are_bliss</a>
+    </footer>
   </main>
+
   <script type="module" src="app.js"></script>
 </body>
 </html>
