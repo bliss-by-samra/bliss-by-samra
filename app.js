@@ -1,4 +1,5 @@
 
+
 import { firebaseConfig } from "./firebase-config.js";
 
 import {
@@ -38,6 +39,12 @@ let currentUser = null;
 let currentChatId = null;
 let currentChatMember = null;
 
+let currentPageId = null;
+let pageHistory = [];
+
+let allResources = [];
+let selectedResourceCategory = "All";
+
 const $ = id => document.getElementById(id);
 
 function showMessage(id, message) {
@@ -45,23 +52,58 @@ function showMessage(id, message) {
   if (element) element.textContent = message;
 }
 
-function showPage(pageId) {
-  document.querySelectorAll(".screen").forEach(page => {
-    page.classList.add("hidden");
+// BACK BUTTON AND PAGE NAVIGATION
+
+function createBackButton(page) {
+  if (!page || page.id === "homePage") return;
+
+  if (page.querySelector(".page-back-button")) return;
+
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "page-back-button";
+  button.textContent = "← Back";
+  button.addEventListener("click", goBack);
+
+  page.prepend(button);
+}
+
+function showPage(pageId, addToHistory = true) {
+  const page = $(pageId);
+  if (!page) return;
+
+  if (
+    addToHistory &&
+    currentPageId &&
+    currentPageId !== pageId
+  ) {
+    pageHistory.push(currentPageId);
+  }
+
+  document.querySelectorAll(".screen").forEach(screen => {
+    screen.classList.add("hidden");
   });
 
-  const page = $(pageId);
-  if (page) page.classList.remove("hidden");
+  page.classList.remove("hidden");
 
   document.querySelectorAll("[data-page]").forEach(button => {
-    button.classList.toggle("active", button.dataset.page === pageId);
+    button.classList.toggle(
+      "active",
+      button.dataset.page === pageId
+    );
   });
+
+  currentPageId = pageId;
+
+  createBackButton(page);
 
   const titles = {
     homePage: "Your creative community",
     discoverPage: "Discover creators",
     supportPage: "Creator support",
     createPage: "Create and submit",
+    resourcesPage: "Editing Resources",
+    challengesPage: "Challenges",
     messagesPage: "Messages",
     profilePage: "Your profile",
     ownerProfilePage: "Official BLISS profile"
@@ -83,9 +125,24 @@ function showPage(pageId) {
   if (pageId === "ownerProfilePage") loadOwnerPosts();
 }
 
+function goBack() {
+  const previousPage = pageHistory.pop();
+
+  if (previousPage && $(previousPage)) {
+    showPage(previousPage, false);
+  } else {
+    pageHistory = [];
+    showPage("homePage", false);
+  }
+}
+
 document.querySelectorAll("[data-page]").forEach(button => {
-  button.addEventListener("click", () => showPage(button.dataset.page));
+  button.addEventListener("click", () => {
+    showPage(button.dataset.page);
+  });
 });
+
+// ACCOUNT HELPERS
 
 function isOwner() {
   return currentUser && currentUser.uid === OWNER_UID;
@@ -96,7 +153,10 @@ function setLoggedInUI(user) {
   if ($("appArea")) $("appArea").classList.remove("hidden");
 
   if ($("ownerPanel")) {
-    $("ownerPanel").classList.toggle("hidden", user.uid !== OWNER_UID);
+    $("ownerPanel").classList.toggle(
+      "hidden",
+      user.uid !== OWNER_UID
+    );
   }
 
   if ($("roleLabel")) {
@@ -117,14 +177,21 @@ function setLoggedInUI(user) {
       : "Your creative space is ready.";
   }
 
-  showPage("homePage");
+  pageHistory = [];
+  currentPageId = null;
+  showPage("homePage", false);
 }
 
 function setLoggedOutUI() {
   if ($("authPanel")) $("authPanel").classList.remove("hidden");
   if ($("appArea")) $("appArea").classList.add("hidden");
   if ($("ownerPanel")) $("ownerPanel").classList.add("hidden");
+
+  pageHistory = [];
+  currentPageId = null;
 }
+
+// GENERAL CARDS AND LISTS
 
 function makeCard(title, body, date = "", link = "") {
   const card = document.createElement("article");
@@ -196,13 +263,18 @@ async function loadHome() {
     const announcements = await readCollection("announcements");
 
     announcements.sort((a, b) =>
-      (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0)
+      (b.createdAt?.seconds || 0) -
+      (a.createdAt?.seconds || 0)
     );
 
     showList(
       "announcements",
       announcements.map(item =>
-        makeCard(item.title, item.body, dateLabel(item.createdAt))
+        makeCard(
+          item.title,
+          item.body,
+          dateLabel(item.createdAt)
+        )
       ),
       "No announcements yet. Check back soon."
     );
@@ -218,7 +290,10 @@ async function loadHome() {
       container.replaceChildren();
 
       voices.forEach(item => {
-        const card = makeCard(item.title, item.description || "");
+        const card = makeCard(
+          item.title,
+          item.description || ""
+        );
 
         if (item.url) {
           const audio = document.createElement("audio");
@@ -248,13 +323,24 @@ if ($("signup")) {
     const password = $("password")?.value;
 
     if (!email || !password) {
-      showMessage("authMessage", "Enter your email and password.");
+      showMessage(
+        "authMessage",
+        "Enter your email and password."
+      );
       return;
     }
 
     try {
-      await createUserWithEmailAndPassword(auth, email, password);
-      showMessage("authMessage", "Account created successfully.");
+      await createUserWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
+
+      showMessage(
+        "authMessage",
+        "Account created successfully."
+      );
     } catch (error) {
       showMessage("authMessage", error.message);
     }
@@ -267,12 +353,19 @@ if ($("login")) {
     const password = $("password")?.value;
 
     if (!email || !password) {
-      showMessage("authMessage", "Enter your email and password.");
+      showMessage(
+        "authMessage",
+        "Enter your email and password."
+      );
       return;
     }
 
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      await signInWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
     } catch (error) {
       showMessage("authMessage", error.message);
     }
@@ -292,6 +385,7 @@ onAuthStateChanged(auth, async user => {
   }
 
   setLoggedInUI(user);
+
   await loadProfile();
   await loadHome();
   await loadResources();
@@ -315,9 +409,17 @@ async function loadProfile() {
 
     const data = result.data();
 
-    if ($("igHandle")) $("igHandle").value = data.handle || "";
-    if ($("igLink")) $("igLink").value = data.instagramUrl || "";
-    if ($("profileBio")) $("profileBio").value = data.bio || "";
+    if ($("igHandle")) {
+      $("igHandle").value = data.handle || "";
+    }
+
+    if ($("igLink")) {
+      $("igLink").value = data.instagramUrl || "";
+    }
+
+    if ($("profileBio")) {
+      $("profileBio").value = data.bio || "";
+    }
   } catch (error) {
     console.error("Profile:", error);
   }
@@ -332,13 +434,21 @@ if ($("saveProfile")) {
     const bio = $("profileBio")?.value.trim() || "";
 
     if (handle.length > 40 || bio.length > 250) {
-      showMessage("profileMessage", "Please shorten your profile details.");
+      showMessage(
+        "profileMessage",
+        "Please shorten your profile details."
+      );
       return;
     }
 
-    if (instagramUrl &&
-      !/^https:\/\/(www\.)?instagram\.com\//i.test(instagramUrl)) {
-      showMessage("profileMessage", "Enter a valid Instagram profile link.");
+    if (
+      instagramUrl &&
+      !/^https:\/\/(www\.)?instagram\.com\//i.test(instagramUrl)
+    ) {
+      showMessage(
+        "profileMessage",
+        "Enter a valid Instagram profile link."
+      );
       return;
     }
 
@@ -356,7 +466,10 @@ if ($("saveProfile")) {
 
       showMessage("profileMessage", "Profile saved.");
     } catch (error) {
-      showMessage("profileMessage", "Could not save: " + error.message);
+      showMessage(
+        "profileMessage",
+        "Could not save: " + error.message
+      );
     }
   });
 }
@@ -398,8 +511,10 @@ async function loadDirectory(searchTerm = "") {
 
         messageButton.addEventListener("click", () => {
           if ($("messageRecipient")) {
-            $("messageRecipient").value = profile.handle || "";
+            $("messageRecipient").value =
+              profile.handle || "";
           }
+
           showPage("messagesPage");
         });
 
@@ -422,119 +537,288 @@ if ($("memberSearch")) {
 // OWNER WRITTEN ANNOUNCEMENTS
 
 if ($("publishAnnouncement")) {
-  $("publishAnnouncement").addEventListener("click", async () => {
-    if (!isOwner()) return;
+  $("publishAnnouncement").addEventListener(
+    "click",
+    async () => {
+      if (!isOwner()) return;
 
-    const title = $("announcementTitle")?.value.trim();
-    const body = $("announcementBody")?.value.trim();
+      const title = $("announcementTitle")?.value.trim();
+      const body = $("announcementBody")?.value.trim();
 
-    if (!title || !body) {
-      showMessage("announcementStatus", "Add a title and announcement.");
-      return;
+      if (!title || !body) {
+        showMessage(
+          "announcementStatus",
+          "Add a title and announcement."
+        );
+        return;
+      }
+
+      try {
+        await addDoc(collection(db, "announcements"), {
+          title,
+          body,
+          authorUid: currentUser.uid,
+          createdAt: serverTimestamp()
+        });
+
+        $("announcementTitle").value = "";
+        $("announcementBody").value = "";
+
+        showMessage(
+          "announcementStatus",
+          "Announcement published."
+        );
+
+        loadHome();
+      } catch (error) {
+        showMessage(
+          "announcementStatus",
+          "Could not publish: " + error.message
+        );
+      }
     }
-
-    try {
-      await addDoc(collection(db, "announcements"), {
-        title,
-        body,
-        authorUid: currentUser.uid,
-        createdAt: serverTimestamp()
-      });
-
-      $("announcementTitle").value = "";
-      $("announcementBody").value = "";
-      showMessage("announcementStatus", "Announcement published.");
-      loadHome();
-    } catch (error) {
-      showMessage("announcementStatus", "Could not publish: " + error.message);
-    }
-  });
+  );
 }
 
 // OWNER VOICE ANNOUNCEMENTS
-// Add a public audio link; direct audio upload is not included.
+// Existing feature preserved. Add a public audio link.
 
 if ($("publishVoice")) {
-  $("publishVoice").addEventListener("click", async () => {
-    if (!isOwner()) return;
+  $("publishVoice").addEventListener(
+    "click",
+    async () => {
+      if (!isOwner()) return;
 
-    const title = $("voiceTitle")?.value.trim();
-    const url = $("voiceUrl")?.value.trim();
+      const title = $("voiceTitle")?.value.trim();
+      const url = $("voiceUrl")?.value.trim();
 
-    if (!title || !url || !/^https:\/\//i.test(url)) {
-      showMessage("voiceStatus", "Enter a title and secure audio link.");
-      return;
+      if (!title || !url || !/^https:\/\//i.test(url)) {
+        showMessage(
+          "voiceStatus",
+          "Enter a title and secure audio link."
+        );
+        return;
+      }
+
+      try {
+        await addDoc(collection(db, "voiceAnnouncements"), {
+          title,
+          url,
+          description: "",
+          authorUid: currentUser.uid,
+          createdAt: serverTimestamp()
+        });
+
+        $("voiceTitle").value = "";
+        $("voiceUrl").value = "";
+
+        showMessage(
+          "voiceStatus",
+          "Voice announcement published."
+        );
+
+        loadHome();
+      } catch (error) {
+        showMessage(
+          "voiceStatus",
+          "Could not publish: " + error.message
+        );
+      }
+    }
+  );
+}
+
+// EDITING RESOURCES
+
+function isImageResource(url) {
+  return /\.(png|jpe?g|gif|webp|avif|svg)(?:[?#].*)?$/i.test(url);
+}
+
+function createResourceFilters() {
+  const library = $("resourceLibrary");
+  if (!library) return;
+
+  let filters = $("resourceFilters");
+
+  if (!filters) {
+    filters = document.createElement("div");
+    filters.id = "resourceFilters";
+    filters.className = "resource-filters";
+    library.parentNode.insertBefore(filters, library);
+  }
+
+  const categories = [
+    "All",
+    "Backgrounds",
+    "Overlays",
+    "Fonts",
+    "PNG Elements",
+    "Layouts",
+    "Inspiration"
+  ];
+
+  filters.replaceChildren();
+
+  categories.forEach(category => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "resource-filter-button";
+    button.textContent = category;
+
+    if (selectedResourceCategory === category) {
+      button.classList.add("active");
     }
 
-    try {
-      await addDoc(collection(db, "voiceAnnouncements"), {
-        title,
-        url,
-        description: "",
-        authorUid: currentUser.uid,
-        createdAt: serverTimestamp()
-      });
+    button.addEventListener("click", () => {
+      selectedResourceCategory = category;
+      renderResources();
+    });
 
-      $("voiceTitle").value = "";
-      $("voiceUrl").value = "";
-      showMessage("voiceStatus", "Voice announcement published.");
-      loadHome();
-    } catch (error) {
-      showMessage("voiceStatus", "Could not publish: " + error.message);
-    }
+    filters.append(button);
   });
 }
 
-// RESOURCE LIBRARY
+function renderResources() {
+  const library = $("resourceLibrary");
+  if (!library) return;
+
+  createResourceFilters();
+
+  const filtered = selectedResourceCategory === "All"
+    ? allResources
+    : allResources.filter(item =>
+        (item.category || "Editing resource")
+          .toLowerCase() === selectedResourceCategory.toLowerCase()
+      );
+
+  library.replaceChildren();
+
+  if (!filtered.length) {
+    const empty = document.createElement("p");
+    empty.className = "muted";
+    empty.textContent = selectedResourceCategory === "All"
+      ? "No resources have been added yet."
+      : "No resources in this category yet.";
+
+    library.append(empty);
+    return;
+  }
+
+  filtered.forEach(item => {
+    const card = document.createElement("article");
+    card.className = "data-item resource-card";
+
+    const heading = document.createElement("h3");
+    heading.textContent = item.title || "Editing resource";
+
+    const category = document.createElement("p");
+    category.className = "resource-category";
+    category.textContent = item.category || "Editing resource";
+
+    card.append(heading, category);
+
+    if (item.url && isImageResource(item.url)) {
+      const image = document.createElement("img");
+      image.className = "resource-preview";
+      image.src = item.url;
+      image.alt = item.title || "Editing resource preview";
+      image.loading = "lazy";
+
+      image.addEventListener("error", () => {
+        image.remove();
+      });
+
+      card.append(image);
+    }
+
+    if (item.url) {
+      const link = document.createElement("a");
+      link.className = "resource-download";
+      link.href = item.url;
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      link.textContent = "Open / Download resource";
+      link.setAttribute("download", "");
+      card.append(link);
+    }
+
+    const date = dateLabel(item.createdAt);
+
+    if (date) {
+      const small = document.createElement("small");
+      small.textContent = date;
+      card.append(small);
+    }
+
+    library.append(card);
+  });
+}
 
 async function loadResources() {
   try {
-    const resources = await readCollection("resources", 100);
+    allResources = await readCollection("resources", 100);
 
-    showList(
-      "resourceLibrary",
-      resources.map(item =>
-        makeCard(item.title, item.category || "Editing resource", "", item.url)
-      ),
-      "No resources have been added yet."
+    allResources.sort((a, b) =>
+      (b.createdAt?.seconds || 0) -
+      (a.createdAt?.seconds || 0)
     );
+
+    renderResources();
   } catch (error) {
     console.error("Resources:", error);
+    showMessage(
+      "resourceStatus",
+      "Could not load resources. Please try again."
+    );
   }
 }
 
 if ($("publishResource")) {
-  $("publishResource").addEventListener("click", async () => {
-    if (!isOwner()) return;
+  $("publishResource").addEventListener(
+    "click",
+    async () => {
+      if (!isOwner()) return;
 
-    const title = $("resourceTitle")?.value.trim();
-    const category = $("resourceCategory")?.value.trim();
-    const url = $("resourceUrl")?.value.trim();
+      const title = $("resourceTitle")?.value.trim();
+      const category = $("resourceCategory")?.value.trim();
+      const url = $("resourceUrl")?.value.trim();
 
-    if (!title || !url || !/^https:\/\//i.test(url)) {
-      showMessage("resourceStatus", "Add a title and secure resource link.");
-      return;
+      if (!title || !url || !/^https:\/\//i.test(url)) {
+        showMessage(
+          "resourceStatus",
+          "Add a title and a secure HTTPS resource link."
+        );
+        return;
+      }
+
+      try {
+        await addDoc(collection(db, "resources"), {
+          title,
+          category: category || "Editing resource",
+          url,
+          authorUid: currentUser.uid,
+          createdAt: serverTimestamp()
+        });
+
+        $("resourceTitle").value = "";
+        $("resourceCategory").value = "";
+        $("resourceUrl").value = "";
+
+        showMessage(
+          "resourceStatus",
+          "Resource added successfully."
+        );
+
+        selectedResourceCategory = "All";
+        await loadResources();
+      } catch (error) {
+        showMessage(
+          "resourceStatus",
+          "Could not add resource: " + error.message
+        );
+      }
     }
-
-    try {
-      await addDoc(collection(db, "resources"), {
-        title,
-        category: category || "Editing resource",
-        url,
-        authorUid: currentUser.uid,
-        createdAt: serverTimestamp()
-      });
-
-      $("resourceTitle").value = "";
-      $("resourceCategory").value = "";
-      $("resourceUrl").value = "";
-
-      showMessage("resourceStatus", "Resource added.");
-      loadResources();
-    } catch (error) {
-      showMessage("resourceStatus", "Could not add resource: " + error.message);
-    }
-  });
+  );
 }
 
 // COLLABORATION BOARD
@@ -560,33 +844,47 @@ async function loadCollabs() {
 }
 
 if ($("postCollab")) {
-  $("postCollab").addEventListener("click", async () => {
-    if (!currentUser) return;
+  $("postCollab").addEventListener(
+    "click",
+    async () => {
+      if (!currentUser) return;
 
-    const type = $("collabType")?.value || "Collaboration";
-    const details = $("collabDetails")?.value.trim();
+      const type = $("collabType")?.value || "Collaboration";
+      const details = $("collabDetails")?.value.trim();
 
-    if (!details || details.length < 5) {
-      showMessage("collabStatus", "Write more about your collaboration.");
-      return;
+      if (!details || details.length < 5) {
+        showMessage(
+          "collabStatus",
+          "Write more about your collaboration."
+        );
+        return;
+      }
+
+      try {
+        await addDoc(collection(db, "collabs"), {
+          uid: currentUser.uid,
+          handle: $("igHandle")?.value.trim() || "BLISS member",
+          type,
+          details,
+          createdAt: serverTimestamp()
+        });
+
+        $("collabDetails").value = "";
+
+        showMessage(
+          "collabStatus",
+          "Your collaboration post is live."
+        );
+
+        loadCollabs();
+      } catch (error) {
+        showMessage(
+          "collabStatus",
+          "Could not post: " + error.message
+        );
+      }
     }
-
-    try {
-      await addDoc(collection(db, "collabs"), {
-        uid: currentUser.uid,
-        handle: $("igHandle")?.value.trim() || "BLISS member",
-        type,
-        details,
-        createdAt: serverTimestamp()
-      });
-
-      $("collabDetails").value = "";
-      showMessage("collabStatus", "Your collaboration post is live.");
-      loadCollabs();
-    } catch (error) {
-      showMessage("collabStatus", "Could not post: " + error.message);
-    }
-  });
+  );
 }
 
 // FOLLOW-FOR-FOLLOW SUPPORT BOARD
@@ -613,95 +911,137 @@ async function loadSupport() {
 }
 
 if ($("joinSupport")) {
-  $("joinSupport").addEventListener("click", async () => {
-    if (!currentUser) return;
+  $("joinSupport").addEventListener(
+    "click",
+    async () => {
+      if (!currentUser) return;
 
-    const handle = $("supportHandle")?.value.trim();
-    const link = $("supportLink")?.value.trim();
-    const type = $("supportType")?.value || "Mutual support";
+      const handle = $("supportHandle")?.value.trim();
+      const link = $("supportLink")?.value.trim();
+      const type = $("supportType")?.value || "Mutual support";
 
-    if (!handle || !link ||
-      !/^https:\/\/(www\.)?instagram\.com\//i.test(link)) {
-      showMessage("supportStatus", "Enter your Instagram username and profile link.");
-      return;
+      if (
+        !handle ||
+        !link ||
+        !/^https:\/\/(www\.)?instagram\.com\//i.test(link)
+      ) {
+        showMessage(
+          "supportStatus",
+          "Enter your Instagram username and profile link."
+        );
+        return;
+      }
+
+      try {
+        await addDoc(collection(db, "supportPosts"), {
+          uid: currentUser.uid,
+          handle,
+          link,
+          type,
+          createdAt: serverTimestamp()
+        });
+
+        showMessage(
+          "supportStatus",
+          "Your support post has been added."
+        );
+
+        loadSupport();
+      } catch (error) {
+        showMessage(
+          "supportStatus",
+          "Could not join: " + error.message
+        );
+      }
     }
-
-    try {
-      await addDoc(collection(db, "supportPosts"), {
-        uid: currentUser.uid,
-        handle,
-        link,
-        type,
-        createdAt: serverTimestamp()
-      });
-
-      showMessage("supportStatus", "Your support post has been added.");
-      loadSupport();
-    } catch (error) {
-      showMessage("supportStatus", "Could not join: " + error.message);
-    }
-  });
+  );
 }
 
 // HELP DESK
 
 if ($("sendHelp")) {
-  $("sendHelp").addEventListener("click", async () => {
-    if (!currentUser) return;
+  $("sendHelp").addEventListener(
+    "click",
+    async () => {
+      if (!currentUser) return;
 
-    const message = $("helpMessage")?.value.trim();
+      const message = $("helpMessage")?.value.trim();
 
-    if (!message || message.length < 5) {
-      showMessage("helpStatus", "Please write your message first.");
-      return;
+      if (!message || message.length < 5) {
+        showMessage(
+          "helpStatus",
+          "Please write your message first."
+        );
+        return;
+      }
+
+      try {
+        await addDoc(collection(db, "helpRequests"), {
+          uid: currentUser.uid,
+          message,
+          status: "new",
+          createdAt: serverTimestamp()
+        });
+
+        $("helpMessage").value = "";
+
+        showMessage(
+          "helpStatus",
+          "Your help request has been sent."
+        );
+      } catch (error) {
+        showMessage(
+          "helpStatus",
+          "Could not send: " + error.message
+        );
+      }
     }
-
-    try {
-      await addDoc(collection(db, "helpRequests"), {
-        uid: currentUser.uid,
-        message,
-        status: "new",
-        createdAt: serverTimestamp()
-      });
-
-      $("helpMessage").value = "";
-      showMessage("helpStatus", "Your help request has been sent.");
-    } catch (error) {
-      showMessage("helpStatus", "Could not send: " + error.message);
-    }
-  });
+  );
 }
 
 // EDIT SUBMISSIONS
 
 if ($("submitEdit")) {
-  $("submitEdit").addEventListener("click", async () => {
-    if (!currentUser) return;
+  $("submitEdit").addEventListener(
+    "click",
+    async () => {
+      if (!currentUser) return;
 
-    const link = $("editSubmissionLink")?.value.trim();
-    const note = $("editSubmissionNote")?.value.trim() || "";
+      const link = $("editSubmissionLink")?.value.trim();
+      const note = $("editSubmissionNote")?.value.trim() || "";
 
-    if (!link || !/^https:\/\//i.test(link)) {
-      showMessage("submissionStatus", "Enter a valid link to your edit.");
-      return;
+      if (!link || !/^https:\/\//i.test(link)) {
+        showMessage(
+          "submissionStatus",
+          "Enter a valid link to your edit."
+        );
+        return;
+      }
+
+      try {
+        await addDoc(collection(db, "editSubmissions"), {
+          uid: currentUser.uid,
+          link,
+          note,
+          status: "new",
+          createdAt: serverTimestamp()
+        });
+
+        $("editSubmissionLink").value = "";
+        $("editSubmissionNote").value = "";
+
+        showMessage(
+          "submissionStatus",
+          "Your edit has been submitted."
+        );
+      } catch (error) {
+        showMessage(
+          "submissionStatus",
+          "Could not submit: " + error.message
+        );
+      }
     }
-
-    try {
-      await addDoc(collection(db, "editSubmissions"), {
-        uid: currentUser.uid,
-        link,
-        note,
-        status: "new",
-        createdAt: serverTimestamp()
-      });
-
-      $("editSubmissionLink").value = "";
-      $("editSubmissionNote").value = "";
-      showMessage("submissionStatus", "Your edit has been submitted.");
-    } catch (error) {
-      showMessage("submissionStatus", "Could not submit: " + error.message);
-    }
-  });
+  );
 }
 
 // OWNER OFFICIAL POSTS
@@ -711,7 +1051,8 @@ async function loadOwnerPosts() {
     const posts = await readCollection("ownerPosts", 50);
 
     posts.sort((a, b) =>
-      (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0)
+      (b.createdAt?.seconds || 0) -
+      (a.createdAt?.seconds || 0)
     );
 
     const container = $("ownerPosts");
@@ -738,7 +1079,8 @@ async function loadOwnerPosts() {
     });
 
     if (!posts.length) {
-      container.textContent = "Official BLISS posts will appear here.";
+      container.textContent =
+        "Official BLISS posts will appear here.";
     }
   } catch (error) {
     console.error("Owner posts:", error);
@@ -746,140 +1088,203 @@ async function loadOwnerPosts() {
 }
 
 if ($("publishPost")) {
-  $("publishPost").addEventListener("click", async () => {
-    if (!isOwner()) return;
+  $("publishPost").addEventListener(
+    "click",
+    async () => {
+      if (!isOwner()) return;
 
-    const title = $("postTitle")?.value.trim();
-    const imageUrl = $("postImageUrl")?.value.trim();
-    const caption = $("postCaption")?.value.trim();
+      const title = $("postTitle")?.value.trim();
+      const imageUrl = $("postImageUrl")?.value.trim();
+      const caption = $("postCaption")?.value.trim();
 
-    if (!title || !caption) {
-      showMessage("postStatus", "Add a post title and caption.");
-      return;
+      if (!title || !caption) {
+        showMessage(
+          "postStatus",
+          "Add a post title and caption."
+        );
+        return;
+      }
+
+      if (imageUrl && !/^https:\/\//i.test(imageUrl)) {
+        showMessage(
+          "postStatus",
+          "Image link must start with https://"
+        );
+        return;
+      }
+
+      try {
+        await addDoc(collection(db, "ownerPosts"), {
+          title,
+          imageUrl,
+          caption,
+          authorUid: currentUser.uid,
+          createdAt: serverTimestamp()
+        });
+
+        $("postTitle").value = "";
+        $("postImageUrl").value = "";
+        $("postCaption").value = "";
+
+        showMessage(
+          "postStatus",
+          "Official post published."
+        );
+
+        loadOwnerPosts();
+      } catch (error) {
+        showMessage(
+          "postStatus",
+          "Could not publish: " + error.message
+        );
+      }
     }
-
-    if (imageUrl && !/^https:\/\//i.test(imageUrl)) {
-      showMessage("postStatus", "Image link must start with https://");
-      return;
-    }
-
-    try {
-      await addDoc(collection(db, "ownerPosts"), {
-        title,
-        imageUrl,
-        caption,
-        authorUid: currentUser.uid,
-        createdAt: serverTimestamp()
-      });
-
-      $("postTitle").value = "";
-      $("postImageUrl").value = "";
-      $("postCaption").value = "";
-
-      showMessage("postStatus", "Official post published.");
-      loadOwnerPosts();
-    } catch (error) {
-      showMessage("postStatus", "Could not publish: " + error.message);
-    }
-  });
+  );
 }
 
 // OWNER AVATAR
 
 async function loadOwnerAvatar() {
   try {
-    const result = await getDoc(doc(db, "siteSettings", "owner"));
+    const result = await getDoc(
+      doc(db, "siteSettings", "owner")
+    );
+
     if (!result.exists()) return;
 
     const url = result.data().avatarUrl;
     if (!url) return;
 
-    if ($("officialAvatar")) $("officialAvatar").src = url;
-    if ($("ownerAvatarUrl")) $("ownerAvatarUrl").value = url;
+    if ($("officialAvatar")) {
+      $("officialAvatar").src = url;
+    }
+
+    if ($("ownerAvatarUrl")) {
+      $("ownerAvatarUrl").value = url;
+    }
   } catch (error) {
     console.error("Owner avatar:", error);
   }
 }
 
 if ($("saveOwnerAvatar")) {
-  $("saveOwnerAvatar").addEventListener("click", async () => {
-    if (!isOwner()) return;
+  $("saveOwnerAvatar").addEventListener(
+    "click",
+    async () => {
+      if (!isOwner()) return;
 
-    const url = $("ownerAvatarUrl")?.value.trim();
+      const url = $("ownerAvatarUrl")?.value.trim();
 
-    if (!url || !/^https:\/\//i.test(url)) {
-      showMessage("avatarStatus", "Enter a valid image link.");
-      return;
+      if (!url || !/^https:\/\//i.test(url)) {
+        showMessage(
+          "avatarStatus",
+          "Enter a valid image link."
+        );
+        return;
+      }
+
+      try {
+        await setDoc(
+          doc(db, "siteSettings", "owner"),
+          {
+            avatarUrl: url,
+            updatedAt: serverTimestamp()
+          },
+          { merge: true }
+        );
+
+        if ($("officialAvatar")) {
+          $("officialAvatar").src = url;
+        }
+
+        showMessage("avatarStatus", "Avatar link saved.");
+      } catch (error) {
+        showMessage(
+          "avatarStatus",
+          "Could not save avatar: " + error.message
+        );
+      }
     }
-
-    try {
-      await setDoc(
-        doc(db, "siteSettings", "owner"),
-        {
-          avatarUrl: url,
-          updatedAt: serverTimestamp()
-        },
-        { merge: true }
-      );
-
-      if ($("officialAvatar")) $("officialAvatar").src = url;
-      showMessage("avatarStatus", "Avatar link saved.");
-    } catch (error) {
-      showMessage("avatarStatus", "Could not save avatar: " + error.message);
-    }
-  });
+  );
 }
 
 // MESSAGE REQUESTS
 // Private conversations remain disabled until secure rules are added.
 
 if ($("sendMessageRequest")) {
-  $("sendMessageRequest").addEventListener("click", async () => {
-    if (!currentUser) return;
+  $("sendMessageRequest").addEventListener(
+    "click",
+    async () => {
+      if (!currentUser) return;
 
-    const handle = $("messageRecipient")?.value.trim().replace(/^@/, "");
-    const message = $("messageRequestText")?.value.trim();
+      const handle = $("messageRecipient")
+        ?.value.trim().replace(/^@/, "");
 
-    if (!handle || !message) {
-      showMessage("messageRequestStatus", "Enter a username and message.");
-      return;
-    }
+      const message = $("messageRequestText")
+        ?.value.trim();
 
-    try {
-      const profiles = await getDocs(
-        query(collection(db, "publicProfiles"), limit(100))
-      );
-
-      const match = profiles.docs.find(item =>
-        (item.data().handle || "").replace(/^@/, "").toLowerCase() ===
-        handle.toLowerCase()
-      );
-
-      if (!match) {
-        showMessage("messageRequestStatus", "Member not found. Check the username.");
+      if (!handle || !message) {
+        showMessage(
+          "messageRequestStatus",
+          "Enter a username and message."
+        );
         return;
       }
 
-      if (match.id === currentUser.uid) {
-        showMessage("messageRequestStatus", "You cannot message yourself.");
-        return;
+      try {
+        const profiles = await getDocs(
+          query(
+            collection(db, "publicProfiles"),
+            limit(100)
+          )
+        );
+
+        const match = profiles.docs.find(item =>
+          (item.data().handle || "")
+            .replace(/^@/, "")
+            .toLowerCase() === handle.toLowerCase()
+        );
+
+        if (!match) {
+          showMessage(
+            "messageRequestStatus",
+            "Member not found. Check the username."
+          );
+          return;
+        }
+
+        if (match.id === currentUser.uid) {
+          showMessage(
+            "messageRequestStatus",
+            "You cannot message yourself."
+          );
+          return;
+        }
+
+        await addDoc(collection(db, "messageRequests"), {
+          fromUid: currentUser.uid,
+          toUid: match.id,
+          message,
+          status: "pending",
+          createdAt: serverTimestamp()
+        });
+
+        $("messageRequestText").value = "";
+
+        showMessage(
+          "messageRequestStatus",
+          "Message request sent."
+        );
+
+        loadMessages();
+      } catch (error) {
+        showMessage(
+          "messageRequestStatus",
+          "Could not send request: " + error.message
+        );
       }
-
-      await addDoc(collection(db, "messageRequests"), {
-        fromUid: currentUser.uid,
-        toUid: match.id,
-        message,
-        status: "pending",
-        createdAt: serverTimestamp()
-      });
-
-      $("messageRequestText").value = "";
-      showMessage("messageRequestStatus", "Message request sent.");
-      loadMessages();
-    } catch (error) {
-      showMessage("messageRequestStatus", "Could not send request: " + error.message);
     }
-  });
+  );
 }
 
 async function loadMessages() {
@@ -909,7 +1314,10 @@ async function loadMessages() {
 
       if (data.status !== "pending") return;
 
-      const card = makeCard("New message request", data.message || "");
+      const card = makeCard(
+        "New message request",
+        data.message || ""
+      );
 
       const note = document.createElement("p");
       note.textContent = "Request from a BLISS member";
@@ -920,14 +1328,20 @@ async function loadMessages() {
 
     sent.docs.forEach(item => {
       if (item.data().status === "pending") {
-        cards.push(makeCard(
-          "Request sent",
-          "Waiting for the member to respond."
-        ));
+        cards.push(
+          makeCard(
+            "Request sent",
+            "Waiting for the member to respond."
+          )
+        );
       }
     });
 
-    showList("messageRequests", cards, "No new message requests.");
+    showList(
+      "messageRequests",
+      cards,
+      "No new message requests."
+    );
 
     showList(
       "conversations",
@@ -942,4 +1356,7 @@ async function loadMessages() {
 // FINAL INITIALIZATION
 
 console.log("BLISS app loaded.");
+
+
+  
 
