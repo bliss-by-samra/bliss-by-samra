@@ -17,6 +17,7 @@
 
 <main class="app-wrap">
 
+  <!-- LOGIN -->
   <section id="authPanel" class="panel auth-panel">
     <p class="eyebrow">WELCOME TO BLISS</p>
     <h1>Your editing world,<br><em>all in one place.</em></h1>
@@ -39,6 +40,7 @@
 
   <section id="appArea" class="hidden">
 
+    <!-- HOME -->
     <section id="homePage" class="screen">
       <p class="eyebrow">YOUR CREATIVE SPACE</p>
       <h1 class="page-title">Welcome to BLISS<span>.</span></h1>
@@ -54,8 +56,19 @@
         <p class="muted">Discover creators, find collaborators and share your editing journey.</p>
         <button class="nav-shortcut" data-page="discoverPage">Discover members</button>
       </div>
+
+      <!-- OFFICIAL OWNER PROFILE LINK -->
+      <div class="panel">
+        <p class="eyebrow">OFFICIAL BLISS</p>
+        <h2>Meet the Founder</h2>
+        <p class="muted">Visit Samra's official profile and explore her editing work and resources.</p>
+        <button class="nav-shortcut" data-page="ownerProfilePage">
+          Visit Official Profile
+        </button>
+      </div>
     </section>
 
+    <!-- DISCOVER -->
     <section id="discoverPage" class="screen hidden">
       <p class="eyebrow">MEET THE COMMUNITY</p>
       <h1 class="page-title">Discover</h1>
@@ -63,6 +76,7 @@
       <div id="directory" class="data-list">Loading profiles...</div>
     </section>
 
+    <!-- CREATE -->
     <section id="createPage" class="screen hidden">
       <p class="eyebrow">CREATE & GET HELP</p>
       <h1 class="page-title">Create</h1>
@@ -81,10 +95,12 @@
 
       <div class="panel">
         <h2>Editing Resources</h2>
-        <p class="muted">Backgrounds, overlays, fonts and editing resources will have their own collection here.</p>
+        <p class="muted">Backgrounds, overlays, fonts and editing resources will be available in the official resource library.</p>
+        <button class="nav-shortcut" data-page="ownerProfilePage">Visit Official Profile</button>
       </div>
     </section>
 
+    <!-- MESSAGES -->
     <section id="messagesPage" class="screen hidden">
       <p class="eyebrow">CONNECT PRIVATELY</p>
       <h1 class="page-title">Messages</h1>
@@ -104,9 +120,11 @@
         <button id="backToMessages" class="secondary small">Back to messages</button>
         <h2 id="chatTitle">Conversation</h2>
         <div id="chatMessages" class="chat-messages"></div>
+
         <label>Message
           <textarea id="chatInput" maxlength="1000" rows="2" placeholder="Write a message..."></textarea>
         </label>
+
         <button id="sendChat">Send</button>
         <button id="blockMember" class="secondary small">Block member</button>
         <button id="reportMember" class="secondary small">Report member</button>
@@ -114,6 +132,7 @@
       </div>
     </section>
 
+    <!-- PERSONAL MEMBER PROFILE -->
     <section id="profilePage" class="screen hidden">
       <p class="eyebrow">YOUR BLISS ACCOUNT</p>
       <h1 class="page-title">My Profile</h1>
@@ -139,6 +158,7 @@
         <p id="profileMessage" class="message" aria-live="polite"></p>
       </div>
 
+      <!-- OWNER ADMINISTRATION -->
       <section id="ownerPanel" class="panel hidden">
         <p class="eyebrow">OWNER ONLY</p>
         <h2>BLISS Administration</h2>
@@ -151,9 +171,11 @@
         <label>Announcement title
           <input id="announcementTitle" maxlength="80" placeholder="Announcement title">
         </label>
+
         <label>Announcement message
           <textarea id="announcementBody" maxlength="1500" rows="4" placeholder="Write your update..."></textarea>
         </label>
+
         <button id="publishAnnouncement">Publish update</button>
         <p id="announcementStatus" class="message" aria-live="polite"></p>
 
@@ -164,27 +186,80 @@
       <button id="logout" class="secondary logout-button">Log out</button>
     </section>
 
+    <!-- OFFICIAL OWNER PROFILE - VISIBLE TO ALL MEMBERS -->
+    <section id="ownerProfilePage" class="screen hidden">
+      <p class="eyebrow">BLISS OFFICIAL</p>
+      <h1 class="page-title">Founder Profile</h1>
+
+      <div class="panel owner-profile-card">
+        <div class="owner-avatar">
+          <span>BLISS</span>
+        </div>
+
+        <h2>Samra</h2>
+        <p class="eyebrow">FOUNDER & OFFICIAL OWNER</p>
+        <p class="muted">
+          Welcome to my official BLISS profile. Explore my edits,
+          creative posts and editing resources.
+        </p>
+      </div>
+
+      <div class="panel">
+        <h2>My Editing Posts</h2>
+        <p class="muted">Official editing pictures and posts published by Samra.</p>
+        <div id="ownerPosts" class="owner-post-grid">
+          <p class="muted">Official editing posts will appear here.</p>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>Editing Stuff</h2>
+        <p class="muted">
+          Browse and download editing resources uploaded by the BLISS owner.
+        </p>
+
+        <div id="resourceLibrary" class="data-list">
+          <p class="muted">Editing resources will appear here.</p>
+        </div>
+      </div>
+
+      <button class="secondary" data-page="homePage">Back to Home</button>
+    </section>
+
   </section>
 </main>
 
+<!-- BOTTOM NAVIGATION -->
 <nav id="bottomNav" class="bottom-nav hidden" aria-label="Main navigation">
+
   <button class="nav-button active" data-page="homePage">
-    <span>⌂</span><small>Home</small>
+    <span>⌂</span>
+    <small>Home</small>
   </button>
+
   <button class="nav-button" data-page="discoverPage">
-    <span>⌕</span><small>Discover</small>
+    <span>⌕</span>
+    <small>Discover</small>
   </button>
+
   <button class="nav-button" data-page="createPage">
-    <span>＋</span><small>Create</small>
+    <span>＋</span>
+    <small>Create</small>
   </button>
+
   <button class="nav-button" data-page="messagesPage">
-    <span>♡</span><small>Messages</small>
+    <span>♡</span>
+    <small>Messages</small>
   </button>
+
   <button class="nav-button" data-page="profilePage">
-    <span>◉</span><small>Profile</small>
+    <span>◉</span>
+    <small>Profile</small>
   </button>
+
 </nav>
 
 <script type="module" src="app.js"></script>
 </body>
 </html>
+
