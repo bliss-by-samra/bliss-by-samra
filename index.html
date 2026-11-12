@@ -5,145 +5,469 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#f8f2f6">
-  <title>BLISS — Your Creative Community</title>
+  <meta name="description" content="BLISS — A creative community for editors and fanpages.">
+  <title>BLISS — Creative Community</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
+
 <header class="topbar">
   <a class="brand" href="#" data-page="homePage">BLISS<span>.</span></a>
-  <span id="topLabel" class="top-label">Your creative community</span>
+  <div id="topLabel" class="top-label">Your creative community</div>
 </header>
 
 <main class="app-wrap">
+
+  <!-- LOGIN -->
   <section id="authPanel" class="auth-card">
     <p class="eyebrow">WELCOME TO BLISS</p>
-    <h1>Your creative world,<br><em>all in one place.</em></h1>
-    <p class="muted">A creative home for editors and fanpages.</p>
-    <label>Email<input id="email" type="email" autocomplete="email" placeholder="you@example.com"></label>
-    <label>Password<input id="password" type="password" autocomplete="current-password" placeholder="At least 6 characters"></label>
+    <h1>Your creative world,<br><em>starts here.</em></h1>
+    <p class="muted">A community made for editors, fanpages and creative minds.</p>
+
+    <label>Email
+      <input id="email" type="email" autocomplete="email" placeholder="Your email">
+    </label>
+
+    <label>Password
+      <input id="password" type="password" autocomplete="current-password" placeholder="At least 6 characters">
+    </label>
+
     <div class="actions">
       <button id="signup">Create account</button>
       <button id="login" class="button-soft">Log in</button>
     </div>
-    <p id="authMessage" class="message"></p>
+    <p id="authMessage" class="message" aria-live="polite"></p>
   </section>
 
   <section id="appArea" class="hidden">
+
+    <!-- HOME -->
     <section id="homePage" class="screen">
       <p class="eyebrow">YOUR CREATIVE SPACE</p>
       <h1 class="page-title">Welcome to BLISS<span>.</span></h1>
-      <p class="muted">Create, connect and grow together.</p>
-      <div class="panel">
-        <p class="eyebrow">FROM THE FOUNDER</p>
-        <h2>Official Updates</h2>
-        <div id="announcements" class="data-list">Loading updates...</div>
+      <p class="muted">Create, connect, support and grow together.</p>
+
+      <div class="notice">
+        <strong>Welcome to the BLISS community</strong>
+        <span>Meet creators, discover editing inspiration and take part in community activities.</span>
       </div>
+
       <div class="feature-grid">
-        <button class="feature-card" data-page="discoverPage">⌕<strong>Discover creators</strong><small>Meet editors and fanpages</small></button>
-        <button class="feature-card" data-page="createPage">✦<strong>Editing Help Desk</strong><small>Get creative support</small></button>
-        <button class="feature-card" data-page="ownerProfilePage">♡<strong>Official profile</strong><small>Meet the BLISS founder</small></button>
+        <button class="feature-card" data-page="discoverPage">
+          <strong>⌕ Discover creators</strong>
+          <small>Find editors and collaborators</small>
+        </button>
+        <button class="feature-card" data-page="supportPage">
+          <strong>♡ Creator support</strong>
+          <small>Find voluntary support partners</small>
+        </button>
+        <button class="feature-card" data-page="resourcesPage">
+          <strong>✧ Editing stuff</strong>
+          <small>Explore resources and inspiration</small>
+        </button>
+        <button class="feature-card" data-page="challengesPage">
+          <strong>★ Challenges</strong>
+          <small>Join creative activities</small>
+        </button>
+        <button class="feature-card" data-page="messagesPage">
+          <strong>✉ Messages</strong>
+          <small>Check your conversations</small>
+        </button>
+        <button class="feature-card" data-page="ownerProfilePage">
+          <strong>♛ BLISS founder</strong>
+          <small>Visit the official profile</small>
+        </button>
       </div>
-      <div class="notice"><strong>BLISS is growing.</strong><span>New community features are coming soon.</span></div>
+
+      <div class="panel">
+        <h2>Official Announcements</h2>
+        <div id="announcements" class="data-list">
+          <p class="muted">Loading announcements...</p>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>Voice Announcements</h2>
+        <div id="voiceAnnouncements" class="data-list">
+          <p class="muted">No voice announcements yet.</p>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>Featured Creators</h2>
+        <div id="featuredCreators" class="data-list">
+          <p class="muted">Featured creators will appear here.</p>
+        </div>
+      </div>
     </section>
 
+    <!-- DISCOVER -->
     <section id="discoverPage" class="screen hidden">
       <p class="eyebrow">MEET THE COMMUNITY</p>
       <h1 class="page-title">Discover</h1>
-      <p class="muted">Find editors and fanpages on BLISS.</p>
-      <div id="directory" class="data-list">Loading profiles...</div>
+      <p class="muted">Find editors, fanpages and creative collaborators.</p>
+
+      <div class="panel">
+        <h2>Creator Directory</h2>
+        <input id="memberSearch" type="search" placeholder="Search usernames or creators">
+        <div id="directory" class="data-list">
+          <p class="muted">Loading creators...</p>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>Find Collaborators</h2>
+        <p class="muted">Share what kind of collaboration you are looking for.</p>
+
+        <label>What do you create?
+          <select id="collabType">
+            <option value="Editing">Video editing</option>
+            <option value="Fanpage">Fanpage</option>
+            <option value="Graphics">Graphics and layouts</option>
+            <option value="Photography">Photography</option>
+            <option value="Other">Other</option>
+          </select>
+        </label>
+
+        <label>Collaboration details
+          <textarea id="collabDetails" maxlength="500" rows="3" placeholder="Describe the collaboration you want..."></textarea>
+        </label>
+
+        <button id="postCollab">Post collaboration request</button>
+        <p id="collabStatus" class="message" aria-live="polite"></p>
+      </div>
+
+      <div class="panel">
+        <h2>Collaboration Board</h2>
+        <div id="collabBoard" class="data-list">
+          <p class="muted">No collaboration requests yet.</p>
+        </div>
+      </div>
     </section>
 
+    <!-- SUPPORT -->
+    <section id="supportPage" class="screen hidden">
+      <p class="eyebrow">GROW TOGETHER</p>
+      <h1 class="page-title">Creator Support</h1>
+      <p class="muted">Meet creators who want to support each other's work.</p>
+
+      <div class="notice">
+        <strong>Support with respect</strong>
+        <span>Support is voluntary. No fake likes, forced follows, password sharing or spam. Always respect another creator's choice.</span>
+      </div>
+
+      <div class="panel">
+        <h2>Join the Support Board</h2>
+        <label>Your Instagram username
+          <input id="supportHandle" maxlength="30" placeholder="@yourusername">
+        </label>
+        <label>Your Instagram profile link
+          <input id="supportLink" type="url" maxlength="200" placeholder="https://www.instagram.com/yourusername/">
+        </label>
+        <label>What kind of support are you offering?
+          <select id="supportType">
+            <option value="Editing feedback">Editing feedback</option>
+            <option value="Voluntary follow support">Voluntary follow support</option>
+            <option value="Story sharing">Story sharing</option>
+            <option value="Creative advice">Creative advice</option>
+          </select>
+        </label>
+        <button id="joinSupport">Join support board</button>
+        <p id="supportStatus" class="message" aria-live="polite"></p>
+      </div>
+
+      <div class="panel">
+        <h2>Community Support Members</h2>
+        <div id="supportBoard" class="data-list">
+          <p class="muted">Support members will appear here.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- CREATE -->
     <section id="createPage" class="screen hidden">
-      <p class="eyebrow">CREATE & LEARN</p>
+      <p class="eyebrow">MAKE SOMETHING CREATIVE</p>
       <h1 class="page-title">Create</h1>
+
       <div class="panel">
         <h2>Editing Help Desk</h2>
-        <p class="muted">Send an editing question directly to Samra.</p>
-        <label>Your question<textarea id="helpMessage" maxlength="1000" rows="5" placeholder="Ask anything about editing..."></textarea></label>
-        <button id="sendHelp">Send request</button>
-        <p id="helpStatus" class="message"></p>
+        <p class="muted">Send your editing questions directly to the BLISS owner.</p>
+        <label>Your question
+          <textarea id="helpMessage" maxlength="1000" rows="4" placeholder="Ask about editing, ideas or resources..."></textarea>
+        </label>
+        <button id="sendHelp">Send question</button>
+        <p id="helpStatus" class="message" aria-live="polite"></p>
       </div>
+
       <div class="panel">
-        <h2>Editing Resources</h2>
-        <p class="muted">The official editing library is being prepared.</p>
-        <button class="button-soft" data-page="ownerProfilePage">Visit Official Profile</button>
+        <h2>Submit Your Edit</h2>
+        <p class="muted">Share a link to your creative work for consideration in BLISS features and challenges.</p>
+        <label>Post or edit link
+          <input id="editSubmissionLink" type="url" maxlength="500" placeholder="Paste your post link">
+        </label>
+        <label>Short description
+          <textarea id="editSubmissionNote" maxlength="300" rows="2" placeholder="Tell us about your edit..."></textarea>
+        </label>
+        <button id="submitEdit">Submit edit</button>
+        <p id="submissionStatus" class="message" aria-live="polite"></p>
       </div>
     </section>
 
+    <!-- RESOURCES -->
+    <section id="resourcesPage" class="screen hidden">
+      <p class="eyebrow">THE CREATIVE LIBRARY</p>
+      <h1 class="page-title">Editing Stuff</h1>
+      <p class="muted">Explore resources shared by the BLISS owner.</p>
+
+      <div class="feature-grid">
+        <div class="feature-card"><strong>Backgrounds</strong><small>Creative backgrounds</small></div>
+        <div class="feature-card"><strong>Overlays</strong><small>Editing overlays</small></div>
+        <div class="feature-card"><strong>Fonts</strong><small>Typography resources</small></div>
+        <div class="feature-card"><strong>PNG Elements</strong><small>Transparent elements</small></div>
+        <div class="feature-card"><strong>Layouts</strong><small>Post and story layouts</small></div>
+        <div class="feature-card"><strong>Inspiration</strong><small>Creative ideas</small></div>
+      </div>
+
+      <div class="panel">
+        <h2>Resource Library</h2>
+        <div id="resourceLibrary" class="data-list">
+          <p class="muted">Resources will appear here when published by the owner.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- CHALLENGES -->
+    <section id="challengesPage" class="screen hidden">
+      <p class="eyebrow">SHOW YOUR CREATIVITY</p>
+      <h1 class="page-title">BLISS Challenges</h1>
+      <div class="panel">
+        <h2>Current Challenge</h2>
+        <div id="currentChallenge" class="data-list">
+          <p class="muted">The next BLISS challenge will be announced here.</p>
+        </div>
+      </div>
+      <div class="panel">
+        <h2>Challenge Entries</h2>
+        <div id="challengeEntries" class="data-list">
+          <p class="muted">Entries will appear here.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- MESSAGES -->
     <section id="messagesPage" class="screen hidden">
-      <p class="eyebrow">COMMUNITY CONNECTION</p>
+      <p class="eyebrow">CONNECT WITH CREATORS</p>
       <h1 class="page-title">Messages</h1>
-      <div class="panel">
-        <h2>Member messaging</h2>
-        <p class="muted">Private messaging is being prepared with safety and message-request controls.</p>
+
+      <div class="notice">
+        <strong>Your privacy matters</strong>
+        <span>Only accept conversations with people you feel comfortable talking to. Never share passwords, private addresses or personal information.</span>
       </div>
+
       <div class="panel">
-        <h2>Need help?</h2>
-        <button data-page="createPage">Open Help Desk</button>
+        <h2>Message Requests</h2>
+        <div id="messageRequests" class="data-list">
+          <p class="muted">No message requests yet.</p>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>Your Conversations</h2>
+        <div id="conversations" class="data-list">
+          <p class="muted">No conversations yet.</p>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>Start a Conversation</h2>
+        <label>Member's BLISS username or UID
+          <input id="messageRecipient" maxlength="100" placeholder="Enter member details">
+        </label>
+        <label>Your message
+          <textarea id="messageRequestText" maxlength="500" rows="3" placeholder="Write a friendly introduction..."></textarea>
+        </label>
+        <button id="sendMessageRequest">Send message request</button>
+        <p id="messageRequestStatus" class="message" aria-live="polite"></p>
+      </div>
+
+      <div id="chatPanel" class="panel hidden">
+        <button id="backToMessages" class="button-soft">Back to messages</button>
+        <h2 id="chatTitle">Conversation</h2>
+        <div id="chatMessages" class="chat-messages"></div>
+        <label>Message
+          <textarea id="chatInput" maxlength="1000" rows="2" placeholder="Write a message..."></textarea>
+        </label>
+        <button id="sendChat">Send</button>
+        <button id="blockMember" class="button-soft">Block member</button>
+        <button id="reportMember" class="button-soft">Report member</button>
+        <p id="chatStatus" class="message" aria-live="polite"></p>
       </div>
     </section>
 
+    <!-- PROFILE -->
     <section id="profilePage" class="screen hidden">
       <p class="eyebrow">YOUR BLISS ACCOUNT</p>
       <h1 class="page-title">My Profile</h1>
+
       <div class="panel">
-        <p id="roleLabel" class="eyebrow">MEMBER</p>
+        <p id="roleLabel" class="eyebrow">BLISS MEMBER</p>
         <h2 id="welcomeTitle">Your profile</h2>
         <p id="accountNote" class="muted"></p>
-        <label>Instagram username<input id="igHandle" maxlength="30" placeholder="@yourusername"></label>
-        <label>Instagram profile link<input id="igLink" type="url" maxlength="200" placeholder="https://www.instagram.com/yourusername/"></label>
-        <label>About your page<textarea id="profileBio" maxlength="120" rows="3" placeholder="Tell us about your edits..."></textarea></label>
+
+        <label>Instagram username
+          <input id="igHandle" maxlength="30" placeholder="@yourusername">
+        </label>
+
+        <label>Instagram profile link
+          <input id="igLink" type="url" maxlength="200" placeholder="https://www.instagram.com/yourusername/">
+        </label>
+
+        <label>About your page
+          <textarea id="profileBio" maxlength="120" rows="3" placeholder="Tell the community about your page..."></textarea>
+        </label>
+
         <button id="saveProfile">Save profile</button>
-        <p id="profileMessage" class="message"></p>
+        <p id="profileMessage" class="message" aria-live="polite"></p>
       </div>
 
+      <div class="panel">
+        <h2>Account Safety</h2>
+        <p class="muted">Keep your login details private. BLISS will never ask you to share your password with another member.</p>
+        <button id="logout" class="button-soft logout-button">Log out</button>
+      </div>
+
+      <!-- OWNER STUDIO -->
       <section id="ownerPanel" class="panel hidden">
-        <p class="eyebrow">OWNER ONLY</p>
-        <h2>BLISS Administration</h2>
+        <p class="eyebrow">PRIVATE OWNER AREA</p>
+        <h2>BLISS Owner Studio</h2>
+        <p class="muted">Only the official owner account should have access to these controls.</p>
+
+        <div class="divider"></div>
         <h3>Help Desk Inbox</h3>
-        <div id="ownerHelp" class="data-list">Loading requests...</div>
-        <h3>Publish Official Update</h3>
-        <label>Announcement title<input id="announcementTitle" maxlength="80" placeholder="Announcement title"></label>
-        <label>Announcement message<textarea id="announcementBody" maxlength="1500" rows="4" placeholder="Write your update..."></textarea></label>
-        <button id="publishAnnouncement">Publish update</button>
-        <p id="announcementStatus" class="message"></p>
+        <div id="ownerHelp" class="data-list"></div>
+
+        <div class="divider"></div>
+        <h3>Publish Official Announcement</h3>
+        <label>Announcement title
+          <input id="announcementTitle" maxlength="80" placeholder="Announcement title">
+        </label>
+        <label>Announcement message
+          <textarea id="announcementBody" maxlength="1500" rows="4" placeholder="Write your official update..."></textarea>
+        </label>
+        <button id="publishAnnouncement">Publish announcement</button>
+        <p id="announcementStatus" class="message" aria-live="polite"></p>
+
+        <div class="divider"></div>
+        <h3>Publish Voice Announcement</h3>
+        <p class="muted">Add a link to an audio file hosted on a service that provides a public audio link.</p>
+        <label>Announcement title
+          <input id="voiceTitle" maxlength="80" placeholder="Voice announcement title">
+        </label>
+        <label>Audio file link
+          <input id="voiceUrl" type="url" maxlength="500" placeholder="https://...">
+        </label>
+        <button id="publishVoice">Publish voice announcement</button>
+        <p id="voiceStatus" class="message" aria-live="polite"></p>
+
+        <div class="divider"></div>
+        <h3>Publish Editing Resource</h3>
+        <label>Resource name
+          <input id="resourceTitle" maxlength="80" placeholder="Example: Pink overlay pack">
+        </label>
+        <label>Resource category
+          <select id="resourceCategory">
+            <option value="Backgrounds">Backgrounds</option>
+            <option value="Overlays">Overlays</option>
+            <option value="Fonts">Fonts</option>
+            <option value="PNG Elements">PNG Elements</option>
+            <option value="Layouts">Layouts</option>
+            <option value="Other">Other</option>
+          </select>
+        </label>
+        <label>Resource download link
+          <input id="resourceUrl" type="url" maxlength="500" placeholder="Paste resource link">
+        </label>
+        <button id="publishResource">Publish resource</button>
+        <p id="resourceStatus" class="message" aria-live="polite"></p>
+
+        <div class="divider"></div>
+        <h3>Publish an Official Post</h3>
+        <label>Post title
+          <input id="postTitle" maxlength="80" placeholder="Post title">
+        </label>
+        <label>Image link
+          <input id="postImageUrl" type="url" maxlength="500" placeholder="Paste image link">
+        </label>
+        <label>Caption
+          <textarea id="postCaption" maxlength="500" rows="3" placeholder="Write your caption..."></textarea>
+        </label>
+        <button id="publishPost">Publish post</button>
+        <p id="postStatus" class="message" aria-live="polite"></p>
+
+        <div class="divider"></div>
+        <h3>Change Official Profile Picture</h3>
+        <p class="muted">Paste a public image link. Only the owner can change this setting.</p>
+        <label>New profile picture link
+          <input id="ownerAvatarUrl" type="url" maxlength="500" placeholder="Paste image link">
+        </label>
+        <button id="saveOwnerAvatar">Save profile picture</button>
+        <p id="avatarStatus" class="message" aria-live="polite"></p>
+
+        <div class="divider"></div>
         <h3>Member Directory</h3>
         <div id="ownerDirectory" class="data-list"></div>
+
+        <div class="divider"></div>
+        <h3>Submitted Edits</h3>
+        <div id="ownerSubmissions" class="data-list"></div>
+
+        <div class="divider"></div>
+        <h3>Collaboration Requests</h3>
+        <div id="ownerCollabs" class="data-list"></div>
       </section>
-      <button id="logout" class="button-soft logout-button">Log out</button>
     </section>
 
+    <!-- OFFICIAL OWNER PROFILE -->
     <section id="ownerProfilePage" class="screen hidden">
       <p class="eyebrow">BLISS OFFICIAL</p>
       <h1 class="page-title">Founder Profile</h1>
+
       <div class="panel owner-profile-card">
         <div class="owner-avatar">
-          <img src="https://raw.githubusercontent.com/bliss-by-samra/bliss-by-samra/main/file_000000009ffc81f8b63fcbabf91165f8.png" alt="BLISS official logo">
+          <img id="officialAvatar" src="https://raw.githubusercontent.com/bliss-by-samra/bliss-by-samra/main/file_000000009ffc81f8b63fcbabf91165f8.png" alt="Official BLISS owner">
         </div>
         <h2>Samra</h2>
-        <p class="eyebrow">FOUNDER & OWNER</p>
-        <p class="muted">Welcome to my official BLISS profile. Explore our creative community.</p>
+        <p class="eyebrow">FOUNDER & OFFICIAL OWNER</p>
+        <p class="muted">Welcome to my official BLISS profile. Explore creative posts, editing resources and community updates.</p>
       </div>
+
       <div class="panel">
-        <h2>My Editing Posts</h2>
-        <p class="muted">Official editing posts will be added here.</p>
-        <div id="ownerPosts" class="data-list">No posts yet.</div>
+        <h2>My Official Posts</h2>
+        <div id="ownerPosts" class="owner-post-grid">
+          <p class="muted">Official posts will appear here.</p>
+        </div>
       </div>
+
       <div class="panel">
-        <h2>Editing Stuff</h2>
-        <p class="muted">Editing resources will appear here when published.</p>
-        <div id="resourceLibrary" class="data-list">No resources yet.</div>
+        <h2>Creator Spotlight</h2>
+        <div id="creatorSpotlight" class="data-list">
+          <p class="muted">Featured creators will appear here.</p>
+        </div>
       </div>
+
       <button class="button-soft" data-page="homePage">Back to Home</button>
     </section>
+
   </section>
 </main>
 
-<nav id="bottomNav" class="bottom-nav hidden">
+<!-- BOTTOM NAVIGATION -->
+<nav id="bottomNav" class="bottom-nav hidden" aria-label="Main navigation">
   <button class="nav-button active" data-page="homePage"><span>⌂</span><small>Home</small></button>
   <button class="nav-button" data-page="discoverPage"><span>⌕</span><small>Discover</small></button>
+  <button class="nav-button" data-page="supportPage"><span>♡</span><small>Support</small></button>
   <button class="nav-button" data-page="createPage"><span>＋</span><small>Create</small></button>
-  <button class="nav-button" data-page="messagesPage"><span>♡</span><small>Messages</small></button>
+  <button class="nav-button" data-page="messagesPage"><span>✉</span><small>Messages</small></button>
   <button class="nav-button" data-page="profilePage"><span>◉</span><small>Profile</small></button>
 </nav>
 
