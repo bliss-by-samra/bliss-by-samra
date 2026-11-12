@@ -1,3 +1,4 @@
+
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
 import {
   getAuth,
@@ -37,7 +38,7 @@ function show(id, visible) {
   $(id).classList.toggle("hidden", !visible);
 }
 
-function message(id, text) {
+function say(id, text) {
   $(id).textContent = text;
 }
 
@@ -53,18 +54,43 @@ function clear(id) {
   $(id).replaceChildren();
 }
 
+// PAGE NAVIGATION
+function openPage(pageId) {
+  document.querySelectorAll(".screen").forEach(page => {
+    page.classList.toggle("hidden", page.id !== pageId);
+  });
+
+  document.querySelectorAll(".nav-button").forEach(button => {
+    button.classList.toggle("active", button.dataset.page === pageId);
+  });
+
+  $("chatPanel").classList.add("hidden");
+  window.scrollTo(0, 0);
+}
+
+document.querySelectorAll("[data-page]").forEach(button => {
+  button.addEventListener("click", () => openPage(button.dataset.page));
+});
+
+// INSTAGRAM LINK CHECK
 function safeInstagramLink(value) {
   try {
     const url = new URL(value);
-    if (url.protocol === "https:" && url.hostname === "www.instagram.com") {
+    if (
+      url.protocol === "https:" &&
+      (url.hostname === "www.instagram.com" ||
+       url.hostname === "instagram.com")
+    ) {
       return url.href;
     }
   } catch (_) {}
   return "";
 }
 
-function renderProfileList(snapshot, targetId, ownerView = false) {
+// MEMBER DIRECTORY
+function renderProfiles(snapshot, targetId, ownerView = false) {
   clear(targetId);
+
   if (snapshot.empty) {
     addText($(targetId), "p", "No profiles yet.");
     return;
@@ -74,9 +100,13 @@ function renderProfileList(snapshot, targetId, ownerView = false) {
     const data = item.data();
     const card = document.createElement("div");
     card.className = "data-item";
+
     addText(card, "strong", data.handle || "BLISS member");
+
     if (data.bio) addText(card, "p", data.bio);
+
     const link = safeInstagramLink(data.instagramUrl || "");
+
     if (link) {
       const anchor = document.createElement("a");
       anchor.href = link;
@@ -85,24 +115,16 @@ function renderProfileList(snapshot, targetId, ownerView = false) {
       anchor.textContent = "View Instagram profile";
       card.appendChild(anchor);
     }
-    if (ownerView) {
-      addText(card, "small", "Member account");
-    }
+
+    if (ownerView) addText(card, "small", "BLISS member");
+
     $(targetId).appendChild(card);
   });
 }
 
-function startMemberListeners(user, isOwner) {
-  if (stopDirectory) stopDirectory();
+// OFFICIAL ANNOUNCEMENTS
+function startAnnouncementListener() {
   if (stopAnnouncements) stopAnnouncements();
-
-  const profilesQuery = query(collection(db, "publicProfiles"));
-  stopDirectory = onSnapshot(profilesQuery, snapshot => {
-    renderProfileList(snapshot, "directory");
-    if (isOwner) renderProfileList(snapshot, "ownerDirectory", true);
-  }, error => {
-    message("profileMessage", "Could not load profiles: " + error.message);
-  });
 
   const updatesQuery = query(
     collection(db, "announcements"),
@@ -111,83 +133,122 @@ function startMemberListeners(user, isOwner) {
 
   stopAnnouncements = onSnapshot(updatesQuery, snapshot => {
     clear("announcements");
+
     if (snapshot.empty) {
       addText($("announcements"), "p", "No official updates yet.");
       return;
     }
+
     snapshot.forEach(item => {
       const data = item.data();
       const card = document.createElement("div");
       card.className = "data-item";
+
       addText(card, "strong", data.title || "BLISS update");
       addText(card, "p", data.body || "");
       addText(card, "small", "Official BLISS announcement");
+
       $("announcements").appendChild(card);
     });
   }, error => {
-    message("authMessage", "Could not load updates: " + error.message);
+    say("authMessage", "Updates could not load: " + error.message);
   });
-
-  if (isOwner) {
-    if (stopOwnerHelp) stopOwnerHelp();
-    stopOwnerHelp = onSnapshot(
-      query(collection(db, "helpRequests"), orderBy("createdAt", "desc")),
-      snapshot => {
-        clear("ownerHelp");
-        if (snapshot.empty) {
-          addText($("ownerHelp"), "p", "No help requests yet.");
-          return;
-        }
-        snapshot.forEach(item => {
-          const data = item.data();
-          const card = document.createElement("div");
-          card.className = "data-item";
-          addText(card, "strong", "Request from a member");
-          addText(card, "p", data.message || "");
-          addText(card, "small", "Request ID: " + item.id);
-          $("ownerHelp").appendChild(card);
-        });
-      },
-      error => message("announcementStatus", "Help requests unavailable: " + error.message)
-    );
-  }
 }
 
+// PROFILE DIRECTORY
+function startDirectoryListener(isOwner) {
+  if (stopDirectory) stopDirectory();
+
+  stopDirectory = onSnapshot(
+    collection(db, "publicProfiles"),
+    snapshot => {
+      renderProfiles(snapshot, "directory");
+      if (isOwner) {
+        renderProfiles(snapshot, "ownerDirectory", true);
+      }
+    },
+    error => say("profileMessage", "Profiles could not load: " + error.message)
+  );
+}
+
+// OWNER'S PRIVATE HELP DESK INBOX
+function startOwnerHelpListener() {
+  if (stopOwnerHelp) stopOwnerHelp();
+
+  const helpQuery = query(
+    collection(db, "helpRequests"),
+    orderBy("createdAt", "desc")
+  );
+
+  stopOwnerHelp = onSnapshot(helpQuery, snapshot => {
+    clear("ownerHelp");
+
+    if (snapshot.empty) {
+      addText($("ownerHelp"), "p", "No questions have been received yet.");
+      return;
+    }
+
+    snapshot.forEach(item => {
+      const data = item.data();
+      const card = document.createElement("div");
+      card.className = "data-item";
+
+      addText(card, "strong", "Member question");
+      addText(card, "p", data.message || "");
+      addText(card, "small", "Request ID: " + item.id);
+
+      $("ownerHelp").appendChild(card);
+    });
+  }, error => {
+    say("announcementStatus", "Inbox error: " + error.message);
+  });
+}
+
+// SIGN UP
 $("signup").addEventListener("click", async () => {
   const email = $("email").value.trim();
   const password = $("password").value;
+
   if (!email || password.length < 6) {
-    message("authMessage", "Enter a valid email and a password of at least 6 characters.");
+    say("authMessage", "Enter a valid email and a password of at least 6 characters.");
     return;
   }
-  message("authMessage", "Creating your account...");
+
+  say("authMessage", "Creating your account...");
+
   try {
     await createUserWithEmailAndPassword(auth, email, password);
-    message("authMessage", "Account created. Welcome to BLISS!");
+    say("authMessage", "Your BLISS account has been created!");
   } catch (error) {
-    message("authMessage", error.message);
+    say("authMessage", error.message);
   }
 });
 
+// LOGIN
 $("login").addEventListener("click", async () => {
   const email = $("email").value.trim();
   const password = $("password").value;
+
   if (!email || !password) {
-    message("authMessage", "Enter your email and password.");
+    say("authMessage", "Enter your email and password.");
     return;
   }
-  message("authMessage", "Logging in...");
+
+  say("authMessage", "Logging in...");
+
   try {
     await signInWithEmailAndPassword(auth, email, password);
   } catch (error) {
-    message("authMessage", error.message);
+    say("authMessage", error.message);
   }
 });
 
+// LOGOUT
 $("logout").addEventListener("click", async () => {
   await signOut(auth);
 });
 
+// SAVE PROFILE
 $("saveProfile").addEventListener("click", async () => {
   if (!currentUser) return;
 
@@ -196,16 +257,17 @@ $("saveProfile").addEventListener("click", async () => {
   const bio = $("profileBio").value.trim();
 
   if (handle && !/^[A-Za-z0-9._]{1,30}$/.test(handle)) {
-    message("profileMessage", "Please enter a valid Instagram username.");
+    say("profileMessage", "Enter a valid Instagram username.");
     return;
   }
 
   if (instagramUrl && !safeInstagramLink(instagramUrl)) {
-    message("profileMessage", "Use your full https://www.instagram.com/ profile link.");
+    say("profileMessage", "Enter your Instagram profile link.");
     return;
   }
 
-  message("profileMessage", "Saving your profile...");
+  say("profileMessage", "Saving your profile...");
+
   try {
     await setDoc(doc(db, "publicProfiles", currentUser.uid), {
       handle: handle ? "@" + handle : "",
@@ -213,21 +275,26 @@ $("saveProfile").addEventListener("click", async () => {
       bio,
       updatedAt: serverTimestamp()
     }, { merge: true });
-    message("profileMessage", "Your profile has been saved!");
+
+    say("profileMessage", "Your profile has been saved!");
   } catch (error) {
-    message("profileMessage", "Could not save: " + error.message);
+    say("profileMessage", "Could not save: " + error.message);
   }
 });
 
+// SEND QUESTION TO OWNER
 $("sendHelp").addEventListener("click", async () => {
   if (!currentUser) return;
+
   const text = $("helpMessage").value.trim();
+
   if (text.length < 5) {
-    message("helpStatus", "Please write a little more about what you need help with.");
+    say("helpStatus", "Please write at least 5 characters.");
     return;
   }
 
-  message("helpStatus", "Sending your request...");
+  say("helpStatus", "Sending your question...");
+
   try {
     await addDoc(collection(db, "helpRequests"), {
       uid: currentUser.uid,
@@ -235,13 +302,15 @@ $("sendHelp").addEventListener("click", async () => {
       status: "new",
       createdAt: serverTimestamp()
     });
+
     $("helpMessage").value = "";
-    message("helpStatus", "Your request has been sent to the BLISS owner.");
+    say("helpStatus", "Your question has been sent to Samra!");
   } catch (error) {
-    message("helpStatus", "Could not send request: " + error.message);
+    say("helpStatus", "Could not send: " + error.message);
   }
 });
 
+// OWNER PUBLISHES ANNOUNCEMENT
 $("publishAnnouncement").addEventListener("click", async () => {
   if (!currentUser || currentUser.uid !== OWNER_UID) return;
 
@@ -249,11 +318,12 @@ $("publishAnnouncement").addEventListener("click", async () => {
   const body = $("announcementBody").value.trim();
 
   if (!title || !body) {
-    message("announcementStatus", "Enter both a title and a message.");
+    say("announcementStatus", "Enter both a title and a message.");
     return;
   }
 
-  message("announcementStatus", "Publishing...");
+  say("announcementStatus", "Publishing...");
+
   try {
     await addDoc(collection(db, "announcements"), {
       title,
@@ -261,48 +331,68 @@ $("publishAnnouncement").addEventListener("click", async () => {
       authorUid: currentUser.uid,
       createdAt: serverTimestamp()
     });
+
     $("announcementTitle").value = "";
     $("announcementBody").value = "";
-    message("announcementStatus", "Announcement published!");
+    say("announcementStatus", "Your update has been published!");
   } catch (error) {
-    message("announcementStatus", "Could not publish: " + error.message);
+    say("announcementStatus", "Could not publish: " + error.message);
   }
 });
 
+// AUTHENTICATION STATE
 onAuthStateChanged(auth, async user => {
   currentUser = user;
+
   show("authPanel", !user);
-  show("memberArea", !!user);
+  show("appArea", !!user);
+  show("bottomNav", !!user);
 
   if (!user) {
     show("ownerPanel", false);
+
     if (stopDirectory) stopDirectory();
     if (stopAnnouncements) stopAnnouncements();
     if (stopOwnerHelp) stopOwnerHelp();
+
     return;
   }
 
   const isOwner = user.uid === OWNER_UID;
-  $("welcomeTitle").textContent = "Welcome to BLISS";
-  $("roleLabel").textContent = isOwner ? "OWNER DASHBOARD" : "MEMBER DASHBOARD";
+
+  $("roleLabel").textContent = isOwner ? "BLISS OWNER" : "BLISS MEMBER";
+  $("welcomeTitle").textContent = isOwner ? "Samra's BLISS Profile" : "My BLISS Profile";
   $("accountNote").textContent = isOwner
-    ? "You are signed in as the BLISS owner."
-    : "You are signed in as a BLISS member.";
+    ? "You are signed in as the official owner."
+    : "You are part of the BLISS community.";
+
+  $("topLabel").textContent = isOwner ? "Founder & Owner" : "BLISS Member";
 
   show("ownerPanel", isOwner);
 
+  openPage("homePage");
+
   try {
-    const profileRef = doc(db, "publicProfiles", user.uid);
-    const profileSnapshot = await getDoc(profileRef);
+    const profileSnapshot = await getDoc(
+      doc(db, "publicProfiles", user.uid)
+    );
+
     if (profileSnapshot.exists()) {
       const data = profileSnapshot.data();
       $("igHandle").value = data.handle || "";
       $("igLink").value = data.instagramUrl || "";
       $("profileBio").value = data.bio || "";
+    } else {
+      $("igHandle").value = "";
+      $("igLink").value = "";
+      $("profileBio").value = "";
     }
   } catch (error) {
-    message("profileMessage", "Profile could not load: " + error.message);
+    say("profileMessage", "Profile could not load: " + error.message);
   }
 
-  startMemberListeners(user, isOwner);
+  startDirectoryListener(isOwner);
+  startAnnouncementListener();
+
+  if (isOwner) startOwnerHelpListener();
 });
